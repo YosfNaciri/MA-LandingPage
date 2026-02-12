@@ -116,8 +116,8 @@ function NavBar() {
           transition={{ duration: 0.6, ease: "linear" }}
           className="hidden md:flex items-center gap-4 "
         >
-          <a href="#Services">Nos Services</a>
-          <a href="#Activity">Secteurs d’activités</a>
+   {/*       <a href="#Services">Nos Services</a>
+          <a href="#Activity">Secteurs d’activités</a>*/}
           <a
             className="text-amber-50 bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-md cursor-pointer"
             href="#Contact"

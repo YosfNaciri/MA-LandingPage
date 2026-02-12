@@ -2,7 +2,6 @@ import { motion } from "motion/react";
 import ParticlesBg from "./ParticlesBg";
 
 function Hero() {
-
   return (
     <>
       <ParticlesBg />
@@ -26,10 +25,10 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-gray-600 w-96 md:text-xl text-center md:w-10/12"
           >
-            Plus qu’un cabinet comptable, nous somme votre partenaire numérique.
-            Nous combinons expertise humaine et outils technologiques pour
-            rendre la gestion financière simple, rapide et accessible. Oubliez
-            les contraintes administratives, nous automatisons, vous avancez.
+            Pour mieux vous servir, protéger vos données et simplifier le
+            processus, nous avons adopté une méthode entièrement numérique et
+            sécurisée. Fini les échanges papier ou par email : tout se passe
+            désormais en ligne pour une efficacité maximale.
           </motion.p>
           <div>
             <motion.button
@@ -38,7 +37,7 @@ function Hero() {
               transition={{ duration: 0.6, ease: "linear" }}
               className="hover:text-gray-800 text-lg  md:text-2xl font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 px-6 py-6 rounded-md cursor-pointer shadow-xl"
             >
-              <a href="#Contact">Nous Contacter</a>
+              <a href="#Contact">Révolutionnez vos impôts avec nous</a>
             </motion.button>
           </div>
         </div>

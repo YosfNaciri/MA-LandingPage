@@ -15,51 +15,44 @@ function Services() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-2xl text-blue-600 font-bold"
         >
-          Nos Service
+          Nos Ce qui change pour vous
         </motion.h3>
         <h1 className="text-4xl font-bold text-center w-96 md:w-auto">
-          Avec plus de <span className="text-blue-600">300</span> entreprises
-          qui nous font confiance, nous mettons notre expertise de plus de{" "}
-          <span className="text-blue-600">10 ans</span> au service des
-          entrepreneurs ambitieux. Voir comment
+                   Accédez à votre portail client 24/7 sur ordinateur ou mobile via <span className="text-blue-600">TaxDome</span> pour gérer documents, signatures et factures.
+
         </h1>
         <motion.div
           initial={{ z: -40, opacity: 0 }}
           whileInView={{ z: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: "linear" }}
           viewport={{ once: true, amount: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 "
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 "
         >
           <ServiceCard
-            title="États financiers"
-            description="Obtenez une vision claire de votre entreprise grâce à des états financiers précis et à jour."
+            title="Transmission sécurisée"
+            description="Envoyez vos documents via un portail en ligne dédié."
             color="#29B9E7"
+            emoji="📁"
           />
           <ServiceCard
-            title="Fiscalité"
-            description="Maximisez vos économies d’impôts avec des stratégies fiscales personnalisées pour particuliers et entreprises."
+            title="Protection renforcée"
+            description="Vos informations personnelles sont mieux gardées."
             color="#F48C06"
+            emoji="🔒"
           />
           <ServiceCard
-            title="Tenue de livres"
-            description="Une comptabilité rigoureuse, efficace et conforme pour votre tranquillité d’esprit."
+            title="Suivi rapide"
+            description="Un aperçu clair et instantané de l'avancement de votre dossier."
             color="#5B72EE"
+            emoji="⏱️"
           />
           <ServiceCard
-            title="Gestion de la paie"
-            description="Service de paies incluant paie CCQ."
+            title="Communications unifiées"
+            description="Tout centralisé, sans risque de perte."
             color="#EB493A"
+            emoji="💬"
           />
-          <ServiceCard
-            title="Conseils"
-            description="Des stratégies personnalisées pour propulser votre croissance."
-            color="#5B72EE"
-          />
-          <ServiceCard
-            title="Automatisation"
-            description="Libérez votre potentiel grâce à des processus optimisés et intelligents."
-            color="#EB493A"
-          />
+      
         </motion.div>
       </div>
     </div>

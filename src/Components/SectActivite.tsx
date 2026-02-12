@@ -1,9 +1,9 @@
 import { motion } from "motion/react";
 import SectorCard from "./SectorCard";
 
-import PmeImg from "../assets/PME.jpg";
-import ServiceImg from "../assets/service-Pro.webp";
-import constructImg from "../assets/construct.jpg";
+import PmeImg from "../assets/optimisation-experience-utilisateur.jpg";
+import ServiceImg from "../assets/securitinformatiqueAdobeStock58947296jpeg_604e4ae99bb8f.jpeg";
+import constructImg from "../assets/audit-comptable-et-financier.webp";
 
 function SectActivite() {
   return (
@@ -18,7 +18,7 @@ function SectActivite() {
         viewport={{ once: true, amount: 0.5 }}
         className="text-2xl text-blue-500 font-bold"
       >
-        Secteurs d’activités
+        Notre promesse
       </motion.h3>
 
       <motion.h1
@@ -28,11 +28,8 @@ function SectActivite() {
         viewport={{ once: true, amount: 0.5 }}
         className="text-4xl font-bold text-center w-96 md:w-auto max-w-[1450px]"
       >
-        Quelle que soit votre <span className="text-blue-600">industrie,</span>{" "}
-        notre équipe possède l’expertise nécessaire pour comprendre vos{" "}
-        <span className="text-blue-600">enjeux spécifiques</span> et vous
-        accompagner dans votre{" "}
-        <span className="text-blue-600">croissance.</span>
+       Notre équipe est là pour vous guider à <span className="text-blue-600">chaque étape</span>.
+
       </motion.h1>
 
       <div className="max-w-[1450px]">
@@ -50,9 +47,9 @@ function SectActivite() {
           viewport={{ once: true, amount: 0.5 }}
           className="grid grid-cols-1 md:grid-cols-3 px-9 py-4 justify-center gap-10 text-gray-700"
         >
-          <SectorCard img={PmeImg} title="Petites et moyennes entreprises." />
-          <SectorCard img={ServiceImg} title="Services professionnels." />
-          <SectorCard img={constructImg} title="Construction et immobilier" />
+          <SectorCard img={PmeImg} title="Optimiser votre expérience utilisateur" />
+          <SectorCard img={ServiceImg} title="Garantir la sécurité et la conformité des données" />
+          <SectorCard img={constructImg} title="Préserver la qualité de nos services fiscaux" />
         </motion.div>
       </div>
     </div>

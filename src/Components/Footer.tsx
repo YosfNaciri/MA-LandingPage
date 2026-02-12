@@ -4,7 +4,7 @@ function Footer() {
   return (
     <footer className="bg-linear-to-t from-0% to-blue-50 ">
       <div className="w-full max-w-7xl mx-auto p-4 md:py-8">
-        <div className="sm:flex sm:items-center sm:justify-between">
+{     /*   <div className="sm:flex sm:items-center sm:justify-between">
           <a
             href="#Home"
             className="flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse"
@@ -30,7 +30,7 @@ function Footer() {
               </a>
             </li>
           </ul>
-        </div>
+        </div>*/}
         <hr className="my-6  sm:mx-autoborder-gray-700 lg:my-8" />
         <span className="block text-sm  sm:text-center text-gray-800">
           © {new Date().getFullYear()}{" "}
