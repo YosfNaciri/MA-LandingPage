@@ -28,7 +28,7 @@ function Contact() {
         className="md:w-200 h-150 bg-linear-to-br from-white via-gray-50 to-gray-100 rounded-xl shadow-xl space-y-6"
       >
         {/*<ContactForm />*/}
-        <FilloutStandardEmbed filloutId="icxrgHbeThus" />
+          <FilloutStandardEmbed filloutId="q7LHvaY7kXus" />
       </motion.div>
         <h3 className="text-center w-96 md:w-auto">
         👉 Attendez votre invitation : Ne transmettez rien avant de recevoir l'accès au portail, Les emails ne sont plus acceptés, sauf cas exceptionnels validés par notre équipe.

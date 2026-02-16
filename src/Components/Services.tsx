@@ -15,7 +15,7 @@ function Services() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-2xl text-blue-600 font-bold"
         >
-          Nos Ce qui change pour vous
+          Ce qui change pour vous
         </motion.h3>
         <h1 className="text-4xl font-bold text-center w-96 md:w-auto">
                    Accédez à votre portail client 24/7 sur ordinateur ou mobile via <span className="text-blue-600">TaxDome</span> pour gérer documents, signatures et factures.
