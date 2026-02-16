@@ -40,8 +40,7 @@ function Hero() {
             <motion.button
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-                            onClick={() => setOpen2025(true)}
-
+              onClick={() => setOpen2025(true)}
               transition={{ duration: 0.6, ease: "linear" }}
               className="hover:text-gray-800 text-lg  md:text-2xl font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 px-6 py-6 rounded-md cursor-pointer shadow-xl"
             >
@@ -52,7 +51,7 @@ function Hero() {
               onClick={() => setOpen(true)}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, ease: "linear" }}
-              className="text-gray-600 text-lg hover:underline hover:text-blue-600 text-amber-50 px-6 py-6 cursor-pointer "
+              className="hover:text-gray-800 text-lg font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 my-6 px-6 py-6 rounded-md cursor-pointer shadow-xl"
             >
               <a>Télécharger le guide pratique et aide-mémoire d'impôt</a>
             </motion.button>
@@ -66,11 +65,7 @@ function Hero() {
       >
         <FilloutStandardEmbed filloutId="ghnAaEjFe8us" />
       </Modal>
-      <Modal
-        open={open2025}
-        onClose={() => setOpen2025(false)}
-        title=" "
-      >
+      <Modal open={open2025} onClose={() => setOpen2025(false)} title=" ">
         <FilloutStandardEmbed filloutId="icxrgHbeThus" />
       </Modal>
     </>
