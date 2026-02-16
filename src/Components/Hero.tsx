@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import ParticlesBg from "./ParticlesBg";
-import { Modal } from "./modal";
+import { Modal } from "./Modal";
 import { useState } from "react";
 import { FilloutStandardEmbed } from "@fillout/react";
 
