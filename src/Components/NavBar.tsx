@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { HiMenu } from "react-icons/hi";
-import { IoClose } from "react-icons/io5";
+// import { HiMenu } from "react-icons/hi";
+// import { IoClose } from "react-icons/io5";
 
 import { motion } from "motion/react";
 
+import logo from "../assets/MACPA.jpeg"
+
 
 function NavBar() {
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsOpen((prevState) => !prevState);
-  };
+  // const toggleMenu = () => {
+  //   setIsOpen((prevState) => !prevState);
+  // };
 
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -34,14 +36,14 @@ function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  useEffect(() => {
-    /** juste to handle the scrolling while the nave menu is open on mobile view */
-    if (isOpen) {
-      document.body.classList.add("no-scroll");
-    } else {
-      document.body.classList.remove("no-scroll");
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   /** juste to handle the scrolling while the nave menu is open on mobile view */
+  //   if (isOpen) {
+  //     document.body.classList.add("no-scroll");
+  //   } else {
+  //     document.body.classList.remove("no-scroll");
+  //   }
+  // }, [isOpen]);
 
   return (
     <nav
@@ -49,19 +51,20 @@ function NavBar() {
         showNav ? "translate-y-0" : "-translate-y-full"
       } bg-white/80 backdrop-blur text-gray-800`}
     >
-      <div className="max-w-[1450px] mx-auto p-5 flex items-center justify-between">
+      <div className="max-w-[1450px] mx-auto p-5 flex items-center justify-center md:justify-between">
         <motion.a
-          className="w-40 md:w-100 z-20"
+          className="md:w-100 z-20"
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: "linear" }}
         >
-          <p className="text-4xl font-bold text-transparent bg-clip-text bg-linear-to-tr to-blue-200 from-blue-900">
-            <a href="/#Home">MartineAdam CPA</a>
-          </p>
+
+        <img src={logo}  className="h-10 md:h-15"/>
+
+        
         </motion.a>
 
-        {!isOpen && (
+        {/* {!isOpen && (
           <motion.div
             initial={{ y: -40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -82,8 +85,8 @@ function NavBar() {
           >
             <IoClose size={30} />
           </motion.div>
-        )}
-        {isOpen ? (
+        )} */}
+        {/* {isOpen ? (
           <div className="bg-white overflow-y-hidden fixed z-10 top-0 left-0 w-screen min-h-screen flex justify-center items-center flex-col gap-10 duration-300 ease-in">
             <a
               className="text-2xl font-bold"
@@ -109,7 +112,7 @@ function NavBar() {
           </div>
         ) : (
           <div className="bg-white overflow-y-hidden fixed z-10 top-0 left-[-150%] w-screen min-h-screen flex justify-center items-center flex-col gap-10 duration-300 ease-in"></div>
-        )}
+        )} */}
         <motion.div
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

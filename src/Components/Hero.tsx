@@ -31,21 +31,16 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-gray-600 w-96 md:text-xl text-center md:w-10/12"
           >
-            Pour mieux vous servir, protéger vos données et simplifier le
-            processus, nous avons adopté une méthode entièrement numérique et
-            sécurisée. Fini les échanges papier ou par email : tout se passe
-            désormais en ligne pour une efficacité maximale.
+            Dans le but de mieux vous servir, de protéger vos informations
+            personnelles et de rendre le processus plus simple et plus efficace,
+            nous avons modernisé notre fonctionnement pour la préparation de vos
+            impôts. Au fil des dernières années, les échanges de documents par
+            courriel, papier ou clés USB sont devenus moins sécuritaires et plus
+            difficiles à gérer, autant pour vous que pour notre équipe. C’est
+            pourquoi nous passons maintenant à un processus entièrement
+            numérique et sécurisé pour la majorité des dossiers.
           </motion.p>
           <div className="flex flex-col justify-center items-center">
-            <motion.button
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              onClick={() => setOpen2025(true)}
-              transition={{ duration: 0.6, ease: "linear" }}
-              className="hover:text-gray-800 text-lg  md:text-2xl font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 px-6 py-6 rounded-md cursor-pointer shadow-xl"
-            >
-              <a>Révolutionnez vos impôts avec nous</a>
-            </motion.button>
             <motion.button
               initial={{ y: -50, opacity: 0 }}
               onClick={() => setOpen(true)}
@@ -54,6 +49,15 @@ function Hero() {
               className="hover:text-gray-800 text-lg font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 my-6 px-6 py-6 rounded-md cursor-pointer shadow-xl"
             >
               <a>Télécharger le guide pratique et aide-mémoire d'impôt</a>
+            </motion.button>
+            <motion.button
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              onClick={() => setOpen2025(true)}
+              transition={{ duration: 0.6, ease: "linear" }}
+              className="w-100 hover:text-gray-800 text-lg  md:text-2xl font-bold hover:bg-blue-50 bg-blue-600 text-amber-50 px-6 py-6 rounded-md cursor-pointer shadow-xl"
+            >
+              <a>Impôts 2025</a>
             </motion.button>
           </div>
         </div>
