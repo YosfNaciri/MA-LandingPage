@@ -23,7 +23,7 @@ function Hero() {
             className="text-4xl md:text-6xl xl:text-8xl font-medium text-center w-96 md:w-10/12"
           >
             Le <span className="text-blue-600">cabinet comptable</span> 100% en
-            ligne pour vos besoins financiers
+            ligne pour vos besoins en impôts des particuliers et corporatifs.
           </motion.h1>
           <motion.p
             initial={{ y: -50, opacity: 0 }}

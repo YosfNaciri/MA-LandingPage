@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 
 function Services() {
   return (
-    <div className="flex flex-row justify-center items-center  min-h-11/12 bg-linear-to-t from-40% to-blue-50  md:py-1">
+    <div className="flex flex-row justify-center items-center  min-h-11/12 bg-linear-to-t from-40% to-blue-50 pt-30">
       <div
         className="flex justify-center items-center flex-col gap-15 md:py-1 max-w-[1450px] md:w-10/12"
         id="Services"

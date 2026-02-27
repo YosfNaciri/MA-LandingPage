@@ -6,6 +6,7 @@ import SectActivite from "./Components/SectActivite";
 import Contact from "./Components/Contact";
 import NavBar from './Components/NavBar';
 import Footer from './Components/Footer';
+import FAQThemed from './Components/FAQThemed';
 function App() {
 
   return (
@@ -14,6 +15,7 @@ function App() {
       <Hero />
       <Service />
       <SectActivite />
+      <FAQThemed/>
       <Contact />
       <Footer/>
     </div>

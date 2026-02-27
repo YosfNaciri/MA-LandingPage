@@ -8,7 +8,7 @@ import constructImg from "../assets/audit-comptable-et-financier.webp";
 function SectActivite() {
   return (
     <div
-      className="flex justify-center items-center flex-col gap-15 min-h-screen "
+      className="flex justify-center items-center flex-col gap-15 min-h-11/12 pt-50 pb-30"
       id="Activity"
     >
       <motion.h3
