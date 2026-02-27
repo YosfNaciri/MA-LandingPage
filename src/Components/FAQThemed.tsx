@@ -258,7 +258,7 @@ export default function FAQThemed() {
   }, [query]);
 
   return (
-    <div className="flex justify-center items-center flex-col  md:py-3 min-h-screen gap-10">
+    <div className="flex justify-center items-center flex-col min-h-screen gap-10 pb-30">
       <motion.h3
         initial={{ y: -40, opacity: 0 }}
         whileInView={{ y: 0, opacity: 1 }}
@@ -315,6 +315,7 @@ export default function FAQThemed() {
           </div>
         ))}
       </div>
+      
     </div>
   );
 }

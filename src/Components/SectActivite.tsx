@@ -51,6 +51,25 @@ function SectActivite() {
           <SectorCard img={ServiceImg} title="Garantir la sécurité et la conformité des données" />
           <SectorCard img={constructImg} title="Préserver la qualité de nos services fiscaux" />
         </motion.div>
+        
+<div className="border-b border-slate-200 mt-10 pb-10 text-center">
+  <p className="text-xl font-semibold">
+    Besoin d'autres services spécialisés ?
+  </p>
+
+  <p className="mt-2 text-slate-900">
+    Découvrez l’ensemble des services complémentaires offerts par notre cabinet partenaire.  <span> </span>
+  <a
+    href="https://adamcowen.com/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" font-extrabold text-2xl hover:text-blue-700 transition"
+  >
+    AdamCowen
+  </a> 
+  </p>
+</div>
+
       </div>
     </div>
   );
