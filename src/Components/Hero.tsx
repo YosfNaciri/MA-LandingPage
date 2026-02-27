@@ -12,7 +12,7 @@ function Hero() {
     <>
       <ParticlesBg />
       <div
-        className="flex flex-row justify-center items-center  min-h-screen bg-linear-to-b from-40% to-blue-50 py-4 md:py-1 "
+        className="flex flex-row justify-center items-center  min-h-screen bg-linear-to-b from-40% to-blue-50 py-4 md:py-1 mt-20"
         id="Home"
       >
         <div className=" space-y-12 flex flex-col justify-center items-center max-w-[1450px]">

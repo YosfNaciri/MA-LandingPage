@@ -36,14 +36,17 @@ function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // useEffect(() => {
-  //   /** juste to handle the scrolling while the nave menu is open on mobile view */
-  //   if (isOpen) {
-  //     document.body.classList.add("no-scroll");
-  //   } else {
-  //     document.body.classList.remove("no-scroll");
-  //   }
-  // }, [isOpen]);
+ { 
+  /*
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+  }, [isOpen]);
+
+  */}
 
   return (
     <nav
