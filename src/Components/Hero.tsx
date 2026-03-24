@@ -22,8 +22,8 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-4xl md:text-6xl xl:text-8xl font-medium text-center w-96 md:w-10/12"
           >
-            Le <span className="text-blue-600">cabinet comptable</span> 100% en
-            ligne pour vos besoins en impôts des particuliers et corporatifs.
+            Le <span className="text-blue-600">cabinet comptable</span> en ligne
+            pour vos besoins en impôts des particuliers et corporatifs.
           </motion.h1>
           <motion.p
             initial={{ y: -50, opacity: 0 }}
@@ -31,14 +31,20 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-gray-600 w-96 md:text-xl text-center md:w-10/12"
           >
-            Dans le but de mieux vous servir, de protéger vos informations
-            personnelles et de rendre le processus plus simple et plus efficace,
-            nous avons modernisé notre fonctionnement pour la préparation de vos
-            impôts. Au fil des dernières années, les échanges de documents par
-            courriel, papier ou clés USB sont devenus moins sécuritaires et plus
-            difficiles à gérer, autant pour vous que pour notre équipe. C’est
-            pourquoi nous passons maintenant à un processus entièrement
-            numérique et sécurisé pour la majorité des dossiers.
+            Pour mieux vous servir et protéger vos informations personnelles,
+            nous avons modernisé notre processus de préparation d’impôts.
+            <br />
+            Nos clients peuvent choisir entre{" "}
+            <span className="text-blue-600 font-bold">le portail</span> ou{" "}
+            <span className="text-blue-600 font-bold">
+              le format papier
+            </span>,{" "}
+            <span className="text-red-600 font-bold">
+              sans frais supplémentaires.{" "}
+            </span>
+            Nous nous adaptons à vous. <br />
+            Notre objectif est simple : vous offrir une expérience plus fluide,
+            sécurisée et adaptée à vos besoins.
           </motion.p>
           <div className="flex flex-col justify-center items-center">
             <motion.button
