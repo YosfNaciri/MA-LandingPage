@@ -58,15 +58,15 @@ function SectActivite() {
   </p>
 
   <p className="mt-2 text-slate-900">
-    Découvrez l’ensemble des services complémentaires offerts par notre cabinet partenaire.  <span> </span>
+    Allez voir le futur site Web de notre cabinet partenaire, qui portera le nom suivant : <span> </span>
   <a
     href="https://adamcowen.com/"
     target="_blank"
     rel="noopener noreferrer"
     className=" font-extrabold text-2xl hover:text-blue-700 transition"
   >
-    AdamCowen
-  </a> 
+    Adam Cowen
+  </a>.
   </p>
 </div>
 

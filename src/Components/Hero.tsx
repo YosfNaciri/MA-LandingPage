@@ -12,7 +12,7 @@ function Hero() {
     <>
       <ParticlesBg />
       <div
-        className="flex flex-row justify-center items-center  min-h-screen bg-linear-to-b from-40% to-blue-50 py-4 md:py-1 mt-20"
+        className="flex flex-row justify-center items-center  min-h-screen bg-linear-to-b from-40% to-blue-50 py-4 md:py-1 "
         id="Home"
       >
         <div className=" space-y-12 flex flex-col justify-center items-center max-w-[1450px]">
@@ -22,9 +22,9 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-4xl md:text-6xl xl:text-8xl font-medium text-center w-96 md:w-10/12"
           >
-            Le <span className="text-blue-600">cabinet comptable</span> en ligne
-            pour vos besoins en impôts des particuliers et corporatifs.
+            Martine Adam <span className="text-blue-600">CPA Inc.</span>
           </motion.h1>
+
           <motion.p
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -34,11 +34,9 @@ function Hero() {
             Pour mieux vous servir et protéger vos informations personnelles,
             nous avons modernisé notre processus de préparation d’impôts.
             <br />
-            Nos clients peuvent choisir entre{" "}
+            Nos anciens clients peuvent choisir entre{" "}
             <span className="text-blue-600 font-bold">le portail</span> ou{" "}
-            <span className="text-blue-600 font-bold">
-              le format papier
-            </span>,{" "}
+            <span className="text-blue-600 font-bold">le format papier</span>,{" "}
             <span className="text-red-600 font-bold">
               sans frais supplémentaires.{" "}
             </span>

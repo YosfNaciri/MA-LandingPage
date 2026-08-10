@@ -56,15 +56,13 @@ function NavBar() {
     >
       <div className="max-w-[1450px] mx-auto p-5 flex items-center justify-center md:justify-between">
         <motion.a
-          className="md:w-100 z-20"
+          className="md:w-100 z-20 flex items-center gap-3"
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: "linear" }}
         >
 
-        <img src={logo}  className="h-10 md:h-15"/>
-
-        
+        <img src={logo} alt="Martine Adam CPA" className="h-10 md:h-15"/>
         </motion.a>
 
         {/* {!isOpen && (
