@@ -159,7 +159,7 @@ function PromiseSection() {
       <motion.div initial={{ y: 100, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} className="grid grid-cols-1 justify-center gap-10 px-9 py-4 text-gray-700 md:grid-cols-3">
         {promises.map(([img, title]) => <article key={title} className="w-90 rounded-2xl bg-white p-6 text-center hover:shadow-2xl"><img src={img} alt="" className="mb-4 h-50 w-80 object-cover" /><h3 className="text-xl font-semibold text-[#2D2E32]">{title}</h3></article>)}
       </motion.div>
-      <div className="mt-10 border-b border-slate-200 pb-10 text-center"><p className="text-xl font-semibold">Besoin d'autres services spécialisés ?</p><p className="mt-2 text-slate-900">Allez voir le futur site Web du cabinet qui portera le nom suivant:: <a href="https://adamcowen.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-extrabold hover:text-blue-700">Adam Cowen</a>.</p></div>
+      <div className="mt-10 border-b border-slate-200 pb-10 text-center"><p className="text-xl font-semibold">Besoin d'autres services spécialisés ?</p><p className="mt-2 text-slate-900">Allez voir le futur site Web du cabinet qui portera le nom suivant: <a href="https://adamcowen.com/" target="_blank" rel="noopener noreferrer" className="text-2xl font-extrabold hover:text-blue-700">Adam Cowen</a>.</p></div>
     </div>
   </section>;
 }
