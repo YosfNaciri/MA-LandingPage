@@ -1,4 +1,9 @@
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import ProtectedAdminRoute from "./Components/ProtectedAdminRoute.jsx";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import ConfirmationClient, { ConfirmClientSuccessPage } from "./pages/ConfirmationClient.jsx";
 import { motion } from "motion/react";
 import { FilloutStandardEmbed } from "@fillout/react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
@@ -8,6 +13,8 @@ import experienceImg from "./assets/optimisation-experience-utilisateur.jpg";
 import securityImg from "./assets/securitinformatiqueAdobeStock58947296jpeg_604e4ae99bb8f.jpeg";
 import qualityImg from "./assets/audit-comptable-et-financier.webp";
 import "./App.css";
+
+const MotionLink = motion.create(Link);
 
 const fadeDown = {
   initial: { y: -40, opacity: 0 },
@@ -33,11 +40,11 @@ function NavBar() {
   return (
     <nav className={`fixed top-0 z-50 w-full bg-white/80 text-gray-800 backdrop-blur transition-transform duration-500 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
       <div className="mx-auto flex max-w-[1450px] items-center justify-center p-5 md:justify-between">
-        <motion.a href="#Home" className="z-20 flex items-center gap-3 md:w-100" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
+        <MotionLink to="/#Home" className="z-20 flex items-center gap-3 md:w-100" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
           <img src={logo} alt="Martine Adam CPA" className="h-10 md:h-15" />
-        </motion.a>
+        </MotionLink>
         <motion.div className="hidden items-center gap-4 md:flex" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
-          <a className="cursor-pointer rounded-md bg-blue-500 px-6 py-2 text-amber-50 hover:bg-blue-600" href="#Contact">Nous Contacter</a>
+          <Link className="cursor-pointer rounded-md bg-blue-500 px-6 py-2 text-amber-50 hover:bg-blue-600" to="/#Contact">Nous Contacter</Link>
         </motion.div>
       </div>
     </nav>
@@ -219,6 +226,43 @@ function Contact() {
 }
 function Footer() { return <footer className="bg-linear-to-t from-0% to-blue-50"><div className="mx-auto w-full max-w-7xl p-4 md:py-8"><hr className="my-6 border-gray-700 lg:my-8" /><span className="block text-sm text-gray-800 sm:text-center">© {new Date().getFullYear()} <a href="https://adamcowen.com/" className="hover:underline">MartineAdamCPA™</a>. All Rights Reserved.</span></div></footer>; }
 
+function ScrollToLocation() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      document.getElementById(hash.slice(1))?.scrollIntoView();
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+  return null;
+}
+
 export default function App() {
-  return <div><NavBar /><Hero /><Services /><PromiseSection /><FAQ /><Contact /><Footer /></div>;
+  const { pathname } = useLocation();
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  return <div>
+    <ScrollToLocation />
+    {!isAdmin && <NavBar />}
+    <Routes>
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<ProtectedAdminRoute />}>
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/confirmations" element={<Navigate to="/admin/dashboard" replace />} />
+      </Route>
+      <Route path="/" element={<><Hero /><Services /><PromiseSection /><FAQ /><Contact /></>} />
+      <Route path="/confirm-client" element={<ConfirmationClient />} />
+      <Route path="/confirm-client/merci" element={<ConfirmClientSuccessPage />} />
+      <Route path="/confirmation-client" element={<ConfirmationClient />} />
+      <Route path="/confirmation-client/merci" element={<ConfirmClientSuccessPage />} />
+      <Route path="*" element={
+        <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
+          <h1 className="text-4xl font-bold">Page introuvable</h1>
+          <Link to="/" className="rounded-md bg-blue-600 px-6 py-3 text-white hover:bg-blue-700">Retour à l’accueil</Link>
+        </main>
+      } />
+    </Routes>
+    {!isAdmin && <Footer />}
+  </div>;
 }
