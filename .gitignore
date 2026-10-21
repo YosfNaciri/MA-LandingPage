@@ -47,3 +47,5 @@ Desktop.ini
 *.sln
 *.sw?
 *~
+
+.env.example

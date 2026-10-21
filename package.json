@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "check:supabase": "node scripts/check-supabase.mjs",
-    "test:admin-data": "node --test tests/unit/admin-data.mjs"
+    "test:admin-data": "node --test tests/unit/*.mjs"
   },
   "dependencies": {
     "@fillout/react": "^3.0.0",

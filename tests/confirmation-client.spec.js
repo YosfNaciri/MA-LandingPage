@@ -101,7 +101,7 @@ test('accès direct, validation requise et mise en page mobile', async ({ page }
   await expect(page).toHaveURL(/\/confirmation-client/);
   await page.goto('/confirmation-client');
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Confirmez votre réponse' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Confirmez votre place' })).toBeVisible();
   await page.getByRole('radio', { name: 'Oui', exact: true }).check();
   await page.getByRole('button', { name: 'Envoyer ma réponse' }).click();
   expect(requests).toHaveLength(0);
@@ -111,6 +111,6 @@ test('accès direct, validation requise et mise en page mobile', async ({ page }
 
  test('formulaire public accessible sans invitation', async ({ page }) => {
  await page.goto('/confirm-client');
- await expect(page.getByRole('heading', { name: 'Confirmez votre réponse' })).toBeVisible();
+ await expect(page.getByRole('heading', { name: 'Confirmez votre place' })).toBeVisible();
  await expect(page.locator('form')).toHaveCount(1);
  });

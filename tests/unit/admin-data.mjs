@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fromConfirmationRecord, confirmationExportRow, createConfirmationsCsv, loadAllConfirmations, confirmationColumns, formatConfirmationDate } from '../../src/lib/clientConfirmations.js';
+import { deleteConfirmation, fromConfirmationRecord, confirmationExportRow, createConfirmationsCsv, loadAllConfirmations, confirmationColumns, formatConfirmationDate } from '../../src/lib/clientConfirmations.js';
 const row = { id: 'one', tax_year: 2026, first_name: 'Camille', last_name: 'Test', wants_tax_service: true, people_count: 2, people: [{first_name:'Camille',relation:'self',prepared_2025:'yes'}, {first_name:'Alex',relation:'child',prepared_2025:'no'}], phone:'0123456789', yes_data:{sin_last_three:'007', particularities:[{type:'dependent',note:'=1+1'}],document_method:'paper'}, no_data:{decline_scope:'all',sin_last_three:'999'}, status:'completed', created_at:'2026-10-13T12:00:00Z' };
 test('Oui : détails, personnes, zéros et statut dans les exports', () => {
  const value=fromConfirmationRecord(row);const exported=confirmationExportRow(value);
@@ -30,4 +30,19 @@ test('Lecture refusée et annulation sont transmises au tableau', async () => {
 });
 test('CSV neutralise les formules saisies par un client', () => {
  const csv=createConfirmationsCsv([{name:'=1+1',phone:'+123',note:'texte "cité"'}]);assert.ok(csv.includes("'=1+1"));assert.ok(csv.includes("'+123"));assert.ok(csv.includes('""cité""'));
+});
+
+
+test('Suppression ciblée : vérifie le filtre et la réponse du serveur', async () => {
+ const calls=[];
+ const client={from(table){calls.push(table);return {delete(){calls.push('delete');return this},eq(column,id){calls.push([column,id]);return this},select(column){calls.push(column);return Promise.resolve({data:[{id:'target'}],error:null})}}}};
+ await deleteConfirmation(client,'client_tax_season_confirmations','target');
+ assert.deepEqual(calls,['client_tax_season_confirmations','delete',['id','target'],'id']);
+});
+test('Suppression refusée ou sans ligne : ne pas annoncer un succès', async () => {
+ const clientFor=result=>({from(){return {delete(){return this},eq(){return this},select(){return Promise.resolve(result)}}}});
+ await assert.rejects(deleteConfirmation(clientFor({error:new Error('denied')}),'table','target'),/denied/);
+ await assert.rejects(deleteConfirmation(clientFor({data:[]}), 'table','target'),/Aucune confirmation/);
+ await assert.rejects(deleteConfirmation(clientFor({data:[{id:'other'}]}), 'table','target'),/Aucune confirmation/);
+ await assert.rejects(deleteConfirmation({},'table',''),/invalide/);
 });

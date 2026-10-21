@@ -105,8 +105,42 @@ La page de réussite apparaît après acceptation de l’insertion par Supabase.
 
 Le tableau de bord utilise les colonnes réelles : noms, année fiscale, personnes, détails Oui/Non, statut et dates. Les filtres portent sur la recherche du client et la saison fiscale. Les totaux Oui et Non ignorent les réponses non renseignées.
 
-CSV et Excel exportent toutes les confirmations accessibles, indépendamment des filtres, avec statut et dates de suivi. Le NAS partiel et les téléphones conservent leurs zéros dans Excel. Les anciens dossiers incomplets restent consultables. Aucun bouton de suppression ou de modification des réponses n’est ajouté.
+CSV et Excel exportent toutes les confirmations accessibles, indépendamment des filtres, avec statut et dates de suivi. Le NAS partiel et les téléphones conservent leurs zéros dans Excel. Les anciens dossiers incomplets restent consultables. Les administrateurs peuvent supprimer une soumission après confirmation ; les réponses peuvent aussi être modifiées via le bouton Modifier.
 
 `npm run test:admin-data` vérifie la lecture, les données incomplètes, les réponses Oui/Non, la pagination et les exports. `npm run test:e2e` couvre connexion, droits, détails, filtres et téléchargements avec une API simulée.
 
 Les protections dans l’interface ne remplacent pas les règles RLS. Seul `app_metadata.role = admin` accorde la lecture ; `user_metadata` n’accorde aucun accès. Les scripts SQL sont fournis et ne sont pas appliqués automatiquement à Supabase.
+
+## Suppression des soumissions
+
+Après la configuration des droits de lecture admin (migration 006), exécuter `supabase/migrations/202610160001_admin_delete_confirmations.sql` dans le SQL Editor du nouveau projet. Cette migration accorde DELETE uniquement aux comptes dont `app_metadata.role` vaut `admin` et limite aussi les éventuelles anciennes politiques permissives. Les scripts d’activation antérieurs révoquent DELETE : s’ils sont rejoués, réexécuter cette migration en dernier.
+
+Une corbeille rouge figure en haut à droite de chaque carte. Le bouton **Supprimer** est aussi disponible dans les détails. Les deux ouvrent la même confirmation, avec le client et la saison concernés. La suppression est définitive. La liste et les compteurs ne sont mis à jour qu’après confirmation par Supabase qu’un enregistrement a été supprimé ; en cas d’échec ou d’absence de ligne autorisée, une erreur apparaît et la carte reste affichée.
+
+Validation du 16 octobre 2026 : compilation et ESLint réussis, 8 tests de données réussis, droits de suppression testés sur PostgreSQL local avec Auth simulée. Tests navigateur préparés mais lancement de Chrome bloqué dans cette session (SIGABRT/EPERM). Aucun dossier réel supprimé, aucune migration exécutée à distance, aucun déploiement.
+
+## Politique de confidentialité
+
+La page `/politique-de-confidentialite` est accessible depuis les avis des parcours Oui/Non et le pied de page. Le lien du formulaire ouvre un nouvel onglet pour préserver la saisie. La variable VITE_PRIVACY_POLICY_URL n’est plus utilisée.
+
+Le texte est un projet adapté au formulaire et aux recommandations de la CAI, pas une certification de conformité. Avant publication, le cabinet doit valider sa dénomination, les finalités (dont la nécessité du NAS partiel), les droits, les prestataires, ses pratiques de sécurité, les transferts et les modalités réelles de conservation. Les autres formulaires Fillout nécessitent leur propre examen.
+
+Renseigner dans `.env.local` les variables publiques suivantes, puis recompiler :
+- `VITE_PRIVACY_CONTACT_NAME` : nom ou titre du responsable effectivement désigné.
+- `VITE_PRIVACY_CONTACT_EMAIL` : courriel professionnel pour les demandes et plaintes.
+- `VITE_PRIVACY_RETENTION` : durée ou critères réels, couvrant exports et copies.
+- `VITE_PRIVACY_HOSTING` : prestataires et lieux réels, incluant les éventuels traitements hors Québec.
+
+Si une valeur manque, la page affiche explicitement un projet à compléter. Le fait de renseigner les quatre champs ne valide pas les pratiques : une revue par le cabinet demeure nécessaire. Aucun mécanisme automatique de purge, de consentement aux témoins ou de réponse aux demandes n’est créé par ce texte. Aucun déploiement effectué.
+
+## Édition des soumissions — 21 octobre 2026
+
+Le bouton **Modifier** dans les détails ouvre une fenêtre avec coordonnées, mode de remise, identification NAS, personnes et particularités. Chaque personne et particularité peut être ajoutée, corrigée ou retirée. **Sauvegarder** enregistre la fiche ; **Annuler** permet d’abandonner après confirmation si la saisie a changé. Les champs restent présents en cas d’erreur.
+
+Avant utilisation, exécuter `supabase/migrations/202610210001_admin_update_confirmations.sql` dans le SQL Editor du NOUVEAU projet, après les scripts de lecture et de suppression. Le script accorde UPDATE sur les seules colonnes éditables aux administrateurs et actualise `updated_at` côté serveur. Les anciens scripts d’activation révoquent UPDATE : réexécuter la migration d’édition en dernier si ces scripts sont rejoués.
+
+La sauvegarde vérifie l’identifiant et la dernière version de la fiche. Si un autre utilisateur a modifié ou supprimé la fiche, elle n’est pas écrasée : annuler et actualiser avant de reprendre. Cette protection nécessite le déclencheur SQL fourni. Le passage d’une réponse Oui à Non, l’année, le statut et les dates d’origine ne sont pas modifiés par l’éditeur.
+
+Les compteurs sont recalculés ; les références aux personnes retirées doivent être corrigées. Le retrait du titulaire du NAS efface le NAS partiel associé dans le brouillon. Les champs JSON non affichés et l’autre branche de réponse sont préservés. Les exports suivants utilisent les données sauvegardées.
+
+Contrôles : compilation, ESLint, `npm run test:admin-data` et vérifications SQL locales des droits, de l’horodatage et des conflits. Aucune modification de vraie soumission ni exécution SQL distante n’a été effectuée.

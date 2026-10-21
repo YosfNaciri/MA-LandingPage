@@ -1,3 +1,4 @@
+import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import ProtectedAdminRoute from "./Components/ProtectedAdminRoute.jsx";
@@ -224,7 +225,7 @@ function Contact() {
     <p className="w-96 text-center md:w-8/12">👉 Face à la forte affluence saisonnière, nous ne prenons pas de nouveaux clients pour le moment. Cependant, laissez-nous vos coordonnées : nous pourrons vous orienter vers un confrère ou vous contacter dès qu'une place se libère.</p>
   </section>;
 }
-function Footer() { return <footer className="bg-linear-to-t from-0% to-blue-50"><div className="mx-auto w-full max-w-7xl p-4 md:py-8"><hr className="my-6 border-gray-700 lg:my-8" /><span className="block text-sm text-gray-800 sm:text-center">© {new Date().getFullYear()} <a href="https://adamcowen.com/" className="hover:underline">MartineAdamCPA™</a>. All Rights Reserved.</span></div></footer>; }
+function Footer() { return <footer className="bg-linear-to-t from-0% to-blue-50"><div className="mx-auto w-full max-w-7xl p-4 md:py-8"><hr className="my-6 border-gray-700 lg:my-8" /><Link to="/politique-de-confidentialite" className="mb-4 block text-center text-sm text-blue-700 underline">Politique de confidentialité</Link><span className="block text-sm text-gray-800 sm:text-center">© {new Date().getFullYear()} <a href="https://adamcowen.com/" className="hover:underline">MartineAdamCPA™</a>. All Rights Reserved.</span></div></footer>; }
 
 function ScrollToLocation() {
   const { pathname, hash } = useLocation();
@@ -245,6 +246,7 @@ export default function App() {
     <ScrollToLocation />
     {!isAdmin && <NavBar />}
     <Routes>
+      <Route path="/politique-de-confidentialite" element={<PrivacyPolicy />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route element={<ProtectedAdminRoute />}>
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

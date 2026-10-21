@@ -81,8 +81,9 @@ export function fromConfirmationRecord(row) {
   const children = people.filter(person => person.relation === "child").length;
   const particularities = (Array.isArray(details.particularities) ? details.particularities : [])
     .filter(item => item && typeof item === "object" && !Array.isArray(item))
-    .map(item => ({ type: asText(item.type), person_name: asText(item.person_name), note: asText(item.note) }));
+    .map(item => ({ type: asText(item.type), person_id: asText(item.person_id), person_name: asText(item.person_name), note: asText(item.note) }));
   return {
+    _record: row,
     id: row.id, created_at: row.created_at, updated_at: row.updated_at,
     initial_response_at: row.initial_response_at, status: asText(row.status),
     tax_season: asText(row.tax_year), wants_tax_service: wants,
@@ -187,4 +188,15 @@ export function createConfirmationsCsv(rows) {
   }
   return "\uFEFF" + [headers, ...rows.map((row) => headers.map((key) => row[key]))]
     .map((row) => row.map(cell).join(";")).join("\r\n");
+}
+
+
+export async function deleteConfirmation(client, table, id) {
+  if (!id || typeof id !== "string") throw new Error("Confirmation invalide.");
+  // Returning the id verifies that RLS actually allowed one row to be deleted.
+  const { data, error } = await client.from(table).delete().eq("id", id).select("id");
+  if (error) throw error;
+  if (data?.length !== 1 || data[0].id !== id) {
+    throw new Error("Aucune confirmation supprimée. Vérifiez les droits ou actualisez la liste.");
+  }
 }

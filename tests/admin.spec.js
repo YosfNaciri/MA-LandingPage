@@ -14,12 +14,16 @@ const example = {
 };
 const rows = [example, { ...example, id: '22222222-2222-2222-2222-222222222222', respondent_first_name: 'Alex', respondent_last_name: 'Autre', wants_tax_service: false, tax_season: '2025', email: 'alex@example.test', people: [{ first_name: 'Alex', last_name: 'Autre', relation: 'self' }] }];
 
-async function api(page, { admin = true, failLogin = false, failRead = false, rawData = false, data = rows } = {}) {
+async function api(page, { admin = true, failLogin = false, failRead = false, deleteMode = 'success', updateMode = 'success', rawData = false, data = rows } = {}) {
   const user = { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', aud: 'authenticated', role: 'authenticated', email: 'admin@example.test', app_metadata: { role: admin ? 'admin' : 'member' }, user_metadata: { role: 'admin' }, created_at: '2026-01-01T00:00:00Z' };
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
   const token = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: user.id, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600, app_metadata: user.app_metadata })}.test-signature`;
   const session = { access_token: token, refresh_token: 'test-refresh-token', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, token_type: 'bearer', user };
   let reads = 0;
+  const deletes = [];
+  const updates = [];
+  const updatedRecords = new Map();
+  let records = [...data];
   await page.route('**/auth/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/logout')) return route.fulfill({ status: 204 });
@@ -30,11 +34,30 @@ async function api(page, { admin = true, failLogin = false, failRead = false, ra
     reads++;
     if (failRead) return route.fulfill({ status: 403, json: { code: '42501', message: 'denied' } });
     const url = new URL(route.request().url());
+    if (route.request().method() === 'PATCH') {
+      const id = url.searchParams.get('id')?.replace(/^eq\./, '');
+      const patch = route.request().postDataJSON();
+      updates.push({ id, patch });
+      if (updateMode === 'error') return route.fulfill({ status: 403, json: { code: '42501', message: 'denied' } });
+      if (updateMode === 'conflict') return route.fulfill({ status: 200, json: [] });
+      const original = records.find(row => row.id === id);
+      const saved = { ...(rawData ? original : { ...toConfirmationRecord(original), id: original.id, created_at: original.created_at }), ...patch, updated_at: '2026-10-21T12:00:00Z' };
+      updatedRecords.set(id, saved);
+      return route.fulfill({ status: 200, json: [saved] });
+    }
+    if (route.request().method() === 'DELETE') {
+      const id = url.searchParams.get('id')?.replace(/^eq\./, '');
+      deletes.push(id);
+      if (deleteMode === 'error') return route.fulfill({ status: 403, json: { code: '42501', message: 'denied' } });
+      if (deleteMode === 'empty') return route.fulfill({ status: 200, json: [] });
+      records = records.filter(row => row.id !== id);
+      return route.fulfill({ status: 200, json: [{ id }] });
+    }
     const offset = Number(url.searchParams.get('offset') || 0);
     // Simulate a server limiting pages to one row to verify complete exports.
-    return route.fulfill({ status: 200, json: data.slice(offset, offset + 1).map(row => rawData ? row : ({ ...toConfirmationRecord(row), id: row.id, created_at: row.created_at })) });
+    return route.fulfill({ status: 200, json: records.slice(offset, offset + 1).map(row => updatedRecords.get(row.id) || (rawData ? row : ({ ...toConfirmationRecord(row), id: row.id, created_at: row.created_at }))) });
   });
-  return { reads: () => reads };
+  return { reads: () => reads, deletes, updates };
 }
 
 async function login(page) {
@@ -144,3 +167,75 @@ test('réponse absente et JSON incomplet', async ({ page }) => {
   await expect(page.getByText('1 confirmation(s) affichée(s) sur 1')).toBeVisible();
   await expect(page.getByText('Invalid Date', { exact: false })).toHaveCount(0);
 });
+
+
+test('corbeille et bouton détail : annulation puis suppression ciblée', async ({ page }) => {
+  const mock = await api(page);
+  await login(page);
+  await expect(page.getByText('2 confirmation(s) affichée(s) sur 2')).toBeVisible();
+  await page.getByRole('button', { name: 'Supprimer la soumission de Élodie Test', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Supprimer cette soumission ?' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Annuler', exact: true }).click();
+  expect(mock.deletes).toEqual([]);
+  await page.getByRole('button', { name: 'Supprimer', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Supprimer définitivement', exact: true }).click();
+  await expect(page.getByText('La soumission a été supprimée.')).toBeVisible();
+  await expect(page.getByText('1 confirmation(s) affichée(s) sur 1')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Alex Autre', exact: true })).toBeVisible();
+  expect(mock.deletes).toEqual([rows[0].id]);
+  await page.reload();
+  await expect(page.getByText('1 confirmation(s) affichée(s) sur 1')).toBeVisible();
+});
+for (const deleteMode of ['error', 'empty']) {
+  test(`suppression ${deleteMode} : conserve la soumission et affiche une erreur`, async ({ page }) => {
+    await api(page, { deleteMode });
+    await login(page);
+    await page.getByRole('button', { name: 'Supprimer', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Supprimer cette soumission ?' });
+    await dialog.getByRole('button', { name: 'Supprimer définitivement', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toContainText('Suppression non confirmée');
+    await dialog.getByRole('button', { name: 'Annuler', exact: true }).click();
+    await expect(page.getByText('2 confirmation(s) affichée(s) sur 2')).toBeVisible();
+    await expect(page.getByText('La soumission a été supprimée.')).toHaveCount(0);
+  });
+}
+
+
+test('édition : coordonnées, personnes et particularités enregistrées puis relues', async ({ page }) => {
+  const mock = await api(page);
+  await login(page);
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Modifier la soumission' });
+  await editor.getByLabel('Téléphone', { exact: true }).fill('5145559988');
+  await editor.getByRole('button', { name: 'Ajouter une personne à charge' }).click();
+  await editor.getByLabel('Prénom de la personne 2', { exact: true }).fill('Sam');
+  await editor.getByLabel('Nom de la personne 2', { exact: true }).fill('Test');
+  await editor.getByRole('button', { name: 'Retirer la particularité 1' }).click();
+  await editor.getByRole('button', { name: 'Ajouter une particularité' }).click();
+  await editor.getByLabel('Précision au besoin', { exact: true }).fill('Nouvelle précision');
+  await editor.getByRole('button', { name: 'Sauvegarder', exact: true }).click();
+  await expect(editor).not.toBeVisible();
+  await expect(page.getByText('Les modifications ont été enregistrées.')).toBeVisible();
+  expect(mock.updates).toHaveLength(1);
+  expect(mock.updates[0].patch).toMatchObject({phone:'5145559988',people_count:2,yes_data:{children_count:1,particularities:[{type:'self_employed',note:'Nouvelle précision'}]}});
+  await page.reload();
+  await expect(page.getByText('5145559988', { exact: true })).toBeVisible();
+  await expect(page.getByText('Sam Test', { exact: true })).toBeVisible();
+});
+for (const updateMode of ['error', 'conflict']) {
+  test(`édition ${updateMode} : conserve la saisie et permet d’annuler`, async ({ page }) => {
+    await api(page, { updateMode });
+    await login(page);
+    await page.getByRole('button', { name: 'Modifier', exact: true }).click();
+    const editor = page.getByRole('dialog', { name: 'Modifier la soumission' });
+    await editor.getByLabel('Téléphone', { exact: true }).fill('5145559988');
+    await editor.getByRole('button', { name: 'Sauvegarder', exact: true }).click();
+    await expect(editor.getByRole('alert')).toBeVisible();
+    await expect(editor.getByLabel('Téléphone', { exact: true })).toHaveValue('5145559988');
+    page.once('dialog', dialog => dialog.accept());
+    await editor.getByRole('button', { name: 'Annuler', exact: true }).click();
+    await expect(editor).not.toBeVisible();
+    await expect(page.getByText('0123456789', { exact: true })).toBeVisible();
+  });
+}
