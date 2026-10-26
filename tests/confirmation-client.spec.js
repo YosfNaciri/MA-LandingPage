@@ -20,9 +20,10 @@ async function intercept(page, status = 201) {
   return requests;
 }
 
-test('acceptation, famille, particularités et payload compatible', async ({ page }) => {
+for (const clientType of ['new_client', 'returning_client']) {
+test(`acceptation, famille, particularités et payload compatible — ${clientType}`, async ({ page }) => {
   const requests = await intercept(page);
-  await page.goto('/confirmation-client');
+  await page.goto(clientType === 'new_client' ? '/confirmation-client/nouveau' : '/confirmation-client/formulaire');
   await page.getByRole('radio', { name: 'Oui', exact: true }).check();
   await identity(page);
   await page.getByRole('button', { name: 'Ajouter un conjoint' }).click();
@@ -50,11 +51,15 @@ test('acceptation, famille, particularités et payload compatible', async ({ pag
   expect(requests[0]).not.toHaveProperty('tax_season');
   expect(requests[0].people[2]).toMatchObject({ relation: 'child', sin_unknown: true, sin_last_three: null });
   expect(requests[0].yes_data.particularities[0]).toMatchObject({ type: 'self_employed', person_id: 2 });
+  expect(requests[0].client_type).toBe(clientType);
 });
 
-test('Non demande seulement identité, coordonnées et NAS partiel', async ({ page }) => {
+}
+
+for (const clientType of ['new_client', 'returning_client']) {
+test(`Non demande seulement identité, coordonnées et NAS partiel — ${clientType}`, async ({ page }) => {
   const requests = await intercept(page);
-  await page.goto('/confirm-client');
+  await page.goto(clientType === 'new_client' ? '/confirmation-client/nouveau' : '/confirm-client/formulaire');
   await page.getByRole('radio', { name: 'Non', exact: true }).check();
   await page.getByRole('button', { name: 'Envoyer ma réponse' }).click();
   expect(requests).toHaveLength(0);
@@ -70,11 +75,14 @@ test('Non demande seulement identité, coordonnées et NAS partiel', async ({ pa
   await expect(page.getByRole('heading', { name: 'Merci !' })).toBeVisible();
   expect(requests).toHaveLength(1);
   expect(requests[0]).toMatchObject({ tax_year: 2026, wants_tax_service: false, first_name: 'Camille', last_name: 'Test', phone: '514 555-0123', email: 'camille@example.test', people_count: 1, yes_data: {}, no_data: { sin_last_three: '007', identification_person_name: 'Camille Test', decline_scope: 'self' }, status: 'completed' });
+  expect(requests[0].client_type).toBe(clientType);
 });
+
+}
 
 test('échec réseau préserve les champs et permet une nouvelle tentative', async ({ page }) => {
   const requests = await intercept(page, 500);
-  await page.goto('/confirmation-client');
+  await page.goto('/confirmation-client/formulaire');
   await page.getByRole('radio', { name: 'Oui', exact: true }).check();
   await identity(page);
   await page.locator('#single-sin').fill('123');
@@ -99,7 +107,7 @@ test('accès direct, validation requise et mise en page mobile', async ({ page }
   const requests = await intercept(page);
   await page.goto('/confirmation-client/merci');
   await expect(page).toHaveURL(/\/confirmation-client/);
-  await page.goto('/confirmation-client');
+  await page.goto('/confirmation-client/formulaire');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Confirmez votre place' })).toBeVisible();
   await page.getByRole('radio', { name: 'Oui', exact: true }).check();
@@ -110,7 +118,22 @@ test('accès direct, validation requise et mise en page mobile', async ({ page }
 });
 
  test('formulaire public accessible sans invitation', async ({ page }) => {
- await page.goto('/confirm-client');
+ await page.goto('/confirm-client/formulaire');
  await expect(page.getByRole('heading', { name: 'Confirmez votre place' })).toBeVisible();
  await expect(page.locator('form')).toHaveCount(1);
  });
+
+for (const path of ['/confirmation-client', '/confirm-client']) {
+  test(`choix ancien ou nouveau client depuis ${path}`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { name: 'Ancien client', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Nouveau client', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'Je suis déjà client' }).click();
+    await expect(page).toHaveURL('/confirmation-client/formulaire');
+    await expect(page.getByRole('radio', { name: 'Oui', exact: true })).toBeVisible();
+    await page.goBack();
+    await page.getByRole('link', { name: 'Je suis nouveau client' }).click();
+    await expect(page).toHaveURL('/confirmation-client/nouveau');
+    await expect(page.getByRole('radio', { name: 'Oui', exact: true })).toBeVisible();
+  });
+}

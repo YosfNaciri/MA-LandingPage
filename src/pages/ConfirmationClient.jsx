@@ -33,10 +33,19 @@ const particularityLabels = {
   unknown: "Je ne sais pas",
 };
 
-function PageLayout({ children }) {
+function PageLayout({ children, showBack = false }) {
   return (
     <main className="min-h-screen bg-linear-to-b from-white to-blue-50 px-4 pb-16 pt-32 text-gray-800 sm:pt-40">
       <div className="mx-auto max-w-3xl">
+        {showBack && (
+      <Link
+        to="/confirmation-client"
+        className="mt-8 inline-flex items-center gap-2 rounded-lg text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
+      >
+        <span aria-hidden="true">←</span>
+        Retour au choix du type de client
+      </Link>
+        )}
         <section className="mt-8 rounded-2xl border border-slate-200/60 bg-white/90 p-6 shadow-xl sm:p-10">
           {children}
         </section>
@@ -362,7 +371,7 @@ function particularitiesPayload(selected, details, people, respondent) {
   });
 }
 
-export default function ConfirmClientPage() {
+export default function ConfirmClientPage({ clientType = "returning_client" }) {
   const navigate = useNavigate();
   const [wantsService, setWantsService] = useState("");
   const [declineScope, setDeclineScope] = useState("");
@@ -525,6 +534,7 @@ export default function ConfirmClientPage() {
       activePeople[0];
 
     const payload = {
+      client_type: clientType,
       tax_season: "2026",
       wants_tax_service: wantsService === "yes",
       decline_scope: wantsService === "no" ? declineScope : null,
@@ -563,6 +573,7 @@ export default function ConfirmClientPage() {
       const record =
         wantsService === "no"
           ? {
+              client_type: clientType,
               tax_year: 2026,
               wants_tax_service: false,
               first_name: respondent.firstName.trim(),
@@ -624,7 +635,7 @@ export default function ConfirmClientPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout showBack>
       <p className="font-mono text-xs uppercase tracking-[0.14em] text-blue-600">
         Impôts 2026
       </p>

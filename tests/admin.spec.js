@@ -12,7 +12,7 @@ const example = {
   particularities: [{ type: 'dependent', person_name: 'Élodie Test', note: 'Précision de test' }],
   document_method: 'paper', document_method_note: '=1+1', phone: '0123456789', email: 'elodie@example.test', no_email: false,
 };
-const rows = [example, { ...example, id: '22222222-2222-2222-2222-222222222222', respondent_first_name: 'Alex', respondent_last_name: 'Autre', wants_tax_service: false, tax_season: '2025', email: 'alex@example.test', people: [{ first_name: 'Alex', last_name: 'Autre', relation: 'self' }] }];
+const rows = [{ ...example, client_type: 'new_client' }, { ...example, client_type: 'returning_client', id: '22222222-2222-2222-2222-222222222222', respondent_first_name: 'Alex', respondent_last_name: 'Autre', wants_tax_service: false, tax_season: '2025', email: 'alex@example.test', people: [{ first_name: 'Alex', last_name: 'Autre', relation: 'self' }] }];
 
 async function api(page, { admin = true, failLogin = false, failRead = false, deleteMode = 'success', updateMode = 'success', rawData = false, data = rows } = {}) {
   const user = { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', aud: 'authenticated', role: 'authenticated', email: 'admin@example.test', app_metadata: { role: admin ? 'admin' : 'member' }, user_metadata: { role: 'admin' }, created_at: '2026-01-01T00:00:00Z' };
@@ -31,6 +31,7 @@ async function api(page, { admin = true, failLogin = false, failRead = false, de
     return route.fulfill({ status: 200, json: path.endsWith('/user') ? user : session });
   });
   await page.route('**/rest/v1/**', async (route) => {
+    if (new URL(route.request().url()).pathname.includes('client_intake_')) return route.fulfill({ json: [] });
     reads++;
     if (failRead) return route.fulfill({ status: 403, json: { code: '42501', message: 'denied' } });
     const url = new URL(route.request().url());
@@ -60,11 +61,15 @@ async function api(page, { admin = true, failLogin = false, failRead = false, de
   return { reads: () => reads, deletes, updates };
 }
 
-async function login(page) {
+async function login(page, confirmations = true) {
   await page.goto('/admin/login');
   await page.getByLabel('Courriel', { exact: true }).fill('admin@example.test');
   await page.getByLabel('Mot de passe').fill('test-password');
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
+  if (confirmations) {
+    await expect(page).toHaveURL('/admin/dashboard');
+    await page.getByRole('link', { name: 'Confirmations', exact: true }).click();
+  }
 }
 
 test('pages privées inaccessibles sans session', async ({ page }) => {
@@ -77,7 +82,7 @@ test('pages privées inaccessibles sans session', async ({ page }) => {
 
 test('un compte non admin est refusé même avec user_metadata.role admin', async ({ page }) => {
   const mock = await api(page, { admin: false });
-  await login(page);
+  await login(page, false);
   await expect(page.getByRole('alert')).toContainText('n’a pas accès');
   expect(mock.reads()).toBe(0);
   await page.goto('/admin/dashboard');
@@ -86,7 +91,7 @@ test('un compte non admin est refusé même avec user_metadata.role admin', asyn
 
 test('erreur de connexion lisible et formulaire réutilisable', async ({ page }) => {
   await api(page, { failLogin: true });
-  await login(page);
+  await login(page, false);
   await expect(page.getByRole('alert')).toContainText('Connexion impossible');
   await expect(page.getByRole('button', { name: 'Se connecter', exact: true })).toBeEnabled();
 });
@@ -94,7 +99,7 @@ test('erreur de connexion lisible et formulaire réutilisable', async ({ page })
 test('connexion, recherche, détails, export complet CSV/Excel et déconnexion', async ({ page }, testInfo) => {
   const mock = await api(page);
   await login(page);
-  await expect(page).toHaveURL('/admin/dashboard');
+  await expect(page).toHaveURL('/admin/confirmations');
   await expect(page.getByText('2 confirmation(s) affichée(s) sur 2')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Élodie Test', exact: true })).toBeVisible();
   await expect(page.getByText('007', { exact: true })).toBeVisible();
@@ -103,9 +108,9 @@ test('connexion, recherche, détails, export complet CSV/Excel et déconnexion',
   await expect(page.getByText('2 confirmation(s) affichée(s) sur 2')).toBeVisible();
   await page.getByLabel('Rechercher un client').fill('elodie');
   await expect(page.getByText('1 confirmation(s) affichée(s) sur 2')).toBeVisible();
-  await page.getByLabel('Saison fiscale', { exact: true }).selectOption('2025');
+  await page.getByRole('combobox', { name: 'Saison fiscale', exact: true }).selectOption('2025');
   await expect(page.getByText('Aucune confirmation ne correspond aux filtres.')).toBeVisible();
-  await page.getByLabel('Saison fiscale', { exact: true }).selectOption('');
+  await page.getByRole('combobox', { name: 'Saison fiscale', exact: true }).selectOption('');
   await page.getByRole('button', { name: 'Exporter', exact: true }).click();
   const csvPending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'CSV (.csv)', exact: true }).click();
@@ -239,3 +244,90 @@ for (const updateMode of ['error', 'conflict']) {
     await expect(page.getByText('0123456789', { exact: true })).toBeVisible();
   });
 }
+
+
+test('dashboard source : statistiques, soumissions, statut et historique', async ({ page }) => {
+  await api(page);
+  const record = { id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), nom_legal: 'Client Nouveau', courriel: 'nouveau@example.test', telephone: '5145550100', type_client: 'Particulier', status: 'Nouveau', payload: { form_data: { nom_legal: 'Client Nouveau', type_client: 'particulier' }, repeat_data: {} } };
+  let history = [];
+  await page.route('**/rest/v1/client_intake_submissions*', route => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'PATCH') {
+      expect(url.searchParams.get('status')).toBe('eq.Nouveau');
+      record.status = route.request().postDataJSON().status;
+      history = [{ id: 'history-1', submission_id: record.id, old_status: 'Nouveau', new_status: record.status, changed_at: new Date().toISOString(), note: 'Statut modifié depuis l’espace admin' }];
+      return route.fulfill({ json: record });
+    }
+    return route.fulfill({ json: Number(url.searchParams.get('offset') || 0) ? [] : [record] });
+  });
+  await page.route('**/rest/v1/client_intake_status_history*', route => route.fulfill({ json: history }));
+  await login(page, false);
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  await expect(page.getByText('Total dossiers', { exact: true }).locator('..')).toContainText('1');
+  const metrics = page.getByRole('region', { name: 'Métriques des confirmations clients' });
+  await expect(metrics.getByText('Total confirmations', { exact: true }).locator('..')).toContainText('2');
+  await expect(metrics.getByText('Réponses oui', { exact: true }).locator('..')).toContainText('1');
+  await expect(metrics.getByText('Réponses non', { exact: true }).locator('..')).toContainText('1');
+  await metrics.getByLabel('Type de client', { exact: true }).selectOption('new_client');
+  await expect(metrics.getByText('Total confirmations', { exact: true }).locator('..')).toContainText('1');
+  await expect(metrics.getByText('Nouveau client · new_client', { exact: true })).toBeVisible();
+  await expect(metrics.getByText('Ancien client · returning_client', { exact: true })).toHaveCount(0);
+  await metrics.getByLabel('Type de client', { exact: true }).selectOption('');
+
+  await expect(page.getByText('Confirmations clients →', { exact: true })).toHaveCount(0);
+  await expect(metrics.getByText('Personnes concernées', { exact: true })).toHaveCount(0);
+  const recent = page.getByRole('region', { name: 'Dernières confirmations', exact: true });
+  await expect(recent.getByRole('link', { name: 'Voir tout', exact: true })).toHaveAttribute('href', '/admin/confirmations');
+  await recent.getByRole('link', { name: /Alex Autre/ }).click();
+  await expect(page).toHaveURL(/id=22222222/);
+  await expect(page.getByRole('heading', { name: 'Alex Autre', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
+
+
+  await page.getByRole('link', { name: 'Soumissions', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Client Nouveau', exact: true })).toBeVisible();
+  await page.locator('select').last().selectOption('En révision');
+  await expect(page.locator('select').last()).toHaveValue('En révision');
+  await page.getByRole('link', { name: 'Logs d’activité', exact: true }).click();
+  await expect(page.getByText('Nouveau → En révision', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Confirmations', exact: true }).click();
+  await expect(page.getByText('2 confirmation(s) affichée(s) sur 2')).toBeVisible();
+});
+
+test('export : choix des colonnes et dates identiques en CSV et Excel', async ({ page }, testInfo) => {
+  await api(page);
+  await login(page);
+  await page.getByRole('button', { name: 'Exporter', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Tout désélectionner', exact: true }).click();
+  await expect(dialog.getByRole('button', { name: 'CSV (.csv)', exact: true })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Excel (.xlsx)', exact: true })).toBeDisabled();
+  await dialog.getByLabel('Date de confirmation', { exact: true }).check();
+  await dialog.getByLabel('Nom du répondant', { exact: true }).check();
+  let pending = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'CSV (.csv)', exact: true }).click();
+  let download = await pending;
+  const csvPath = testInfo.outputPath('selected.csv');
+  await download.saveAs(csvPath);
+  const csv = readFileSync(csvPath, 'utf8');
+  expect(csv.split('\r\n')[0]).toBe('\uFEFF"Date de confirmation";"Nom du répondant"');
+  expect(csv).toContain('12/10/2026');
+  expect(csv).not.toContain('elodie@example.test');
+  await page.getByRole('button', { name: 'Exporter', exact: true }).click();
+  pending = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Excel (.xlsx)', exact: true }).click();
+  download = await pending;
+  const excelPath = testInfo.outputPath('selected.xlsx');
+  await download.saveAs(excelPath);
+  execFileSync('python3', ['-c', `import zipfile,sys,xml.etree.ElementTree as E
+with zipfile.ZipFile(sys.argv[1]) as z:
+ root=E.fromstring(z.read('xl/worksheets/sheet1.xml'))
+ ns={'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+ rows=root.findall('s:sheetData/s:row',ns)
+ assert len(rows)==3
+ assert all(len(r.findall('s:c',ns))==2 for r in rows)
+ text=[''.join(c.itertext()) for c in rows[0]]
+ assert text==['Date de confirmation','Nom du répondant'], text
+ assert '12/10/2026' in ''.join(root.itertext())
+`, excelPath]);
+});

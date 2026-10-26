@@ -46,3 +46,23 @@ test('Suppression refusée ou sans ligne : ne pas annoncer un succès', async ()
  await assert.rejects(deleteConfirmation(clientFor({data:[{id:'other'}]}), 'table','target'),/Aucune confirmation/);
  await assert.rejects(deleteConfirmation({},'table',''),/invalide/);
 });
+
+test('Export : trois dates jj/mm/aaaa, dates absentes vides, source inchangée', () => {
+ const source = fromConfirmationRecord({...row, created_at:'2026-10-13T23:50:00Z', initial_response_at:'2026-01-02T00:00:00Z', updated_at:'2026-02-03T12:00:00Z'});
+ const exported = confirmationExportRow(source);
+ assert.equal(exported['Date de confirmation'], '13/10/2026');
+ assert.equal(exported['Première réponse'], '02/01/2026');
+ assert.equal(exported['Dernière mise à jour'], '03/02/2026');
+ assert.equal(source.updated_at, '2026-02-03T12:00:00Z');
+ assert.equal(confirmationExportRow({})['Date de confirmation'], '');
+ assert.equal(confirmationExportRow({ updated_at: 'invalid' })['Dernière mise à jour'], '');
+});
+
+test('Origine : conservée dans les lectures et les exports, ancien client par défaut', () => {
+ for (const client_type of ['new_client', 'returning_client']) {
+  const value = fromConfirmationRecord({...row, client_type});
+  assert.equal(value.client_type, client_type);
+  assert.equal(confirmationExportRow(value)['Type de client'], client_type);
+ }
+ assert.equal(fromConfirmationRecord(row).client_type, 'returning_client');
+});

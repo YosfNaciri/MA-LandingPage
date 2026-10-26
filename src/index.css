@@ -1,1 +1,24 @@
 @import "tailwindcss";
+
+@theme {
+  --color-ma-bg: #f4f9fb;
+  --color-ma-primary: #24478b;
+  --color-ma-primary-dark: #1c376d;
+  --color-ma-separator: #95adbc;
+  --color-ma-text: #1d2630;
+  --color-ma-muted: #607482;
+  --color-ma-light: #edf5f9;
+  --color-ma-danger: #a33b2b;
+}
+
+/* Le parcours nouveau client reprend la palette du site et des confirmations. */
+.ma-form-theme {
+  --color-ma-bg: var(--color-blue-50);
+  --color-ma-primary: var(--color-blue-600);
+  --color-ma-primary-dark: var(--color-blue-700);
+  --color-ma-separator: var(--color-slate-200);
+  --color-ma-text: var(--color-gray-800);
+  --color-ma-muted: var(--color-gray-600);
+  --color-ma-light: var(--color-blue-50);
+  --color-ma-danger: var(--color-red-600);
+}

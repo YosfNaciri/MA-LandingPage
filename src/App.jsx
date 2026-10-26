@@ -1,3 +1,9 @@
+import AdminConfirmations from "./pages/AdminConfirmations.jsx";
+import AdminSubmissionsPage from "./pages/AdminSubmissionsPage.jsx";
+import AdminActivityLogsPage from "./pages/AdminActivityLogsPage.jsx";
+import ClientChoicePage from "./pages/ClientChoicePage.jsx";
+import AccessRequestPage from "./pages/AccessRequestPage.jsx";
+import OuvertureDossierPage from "./pages/OuvertureDossierPage.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
@@ -242,21 +248,30 @@ function ScrollToLocation() {
 export default function App() {
   const { pathname } = useLocation();
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isClientAccess = pathname === "/demande-acces" || pathname === "/ouverture-dossier";
   return <div>
     <ScrollToLocation />
-    {!isAdmin && <NavBar />}
+    {!isAdmin && !isClientAccess && <NavBar />}
     <Routes>
+      <Route path="/demande-acces" element={<AccessRequestPage />} />
+      <Route path="/ouverture-dossier" element={<OuvertureDossierPage />} />
       <Route path="/politique-de-confidentialite" element={<PrivacyPolicy />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route element={<ProtectedAdminRoute />}>
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/confirmations" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/confirmations" element={<AdminConfirmations />} />
+        <Route path="/admin/submissions" element={<AdminSubmissionsPage />} />
+        <Route path="/admin/logs" element={<AdminActivityLogsPage />} />
       </Route>
       <Route path="/" element={<><Hero /><Services /><PromiseSection /><FAQ /><Contact /></>} />
-      <Route path="/confirm-client" element={<ConfirmationClient />} />
+      <Route path="/confirm-client" element={<ClientChoicePage />} />
+      <Route path="/confirm-client/formulaire" element={<ConfirmationClient />} />
       <Route path="/confirm-client/merci" element={<ConfirmClientSuccessPage />} />
-      <Route path="/confirmation-client" element={<ConfirmationClient />} />
+      <Route path="/confirmation-client" element={<ClientChoicePage />} />
+      <Route path="/confirmation-client/nouveau" element={<ConfirmationClient clientType="new_client" />} />
+      <Route path="/confirm-client/nouveau" element={<ConfirmationClient clientType="new_client" />} />
+      <Route path="/confirmation-client/formulaire" element={<ConfirmationClient />} />
       <Route path="/confirmation-client/merci" element={<ConfirmClientSuccessPage />} />
       <Route path="*" element={
         <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6 text-center">
@@ -265,6 +280,6 @@ export default function App() {
         </main>
       } />
     </Routes>
-    {!isAdmin && <Footer />}
+    {!isAdmin && !isClientAccess && <Footer />}
   </div>;
 }

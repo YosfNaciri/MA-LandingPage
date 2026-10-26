@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
 export const confirmClientTable = "client_tax_season_confirmations";
+export const intakeTable = "client_intake_submissions";
+export const intakeDocumentsTable = "client_intake_documents";
+export const intakeFilesBucket = "intake-documents";
 let client;
 
 export function getSupabaseClient() {
@@ -11,7 +14,7 @@ export function getSupabaseClient() {
   }
   client ??= createClient(url, key, {
     db: { schema: "public" },
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: window.location.pathname === "/ouverture-dossier" },
   });
   return client;
 }

@@ -35,15 +35,16 @@ export const particularityLabels = {
 
 // Database schema supplied by the project owner. UI/export names stay internal.
 export const confirmationColumns = [
-  "id", "created_at", "updated_at", "tax_year", "first_name", "last_name",
+  "id", "created_at", "updated_at", "client_type", "tax_year", "first_name", "last_name",
   "email", "phone", "wants_tax_service", "people", "people_count",
   "yes_data", "no_data", "initial_response_at", "status",
 ].join(",");
 
 export function toConfirmationRecord(payload) {
-  const { tax_season, respondent_first_name, respondent_last_name, email, phone,
+  const { client_type = "returning_client", tax_season, respondent_first_name, respondent_last_name, email, phone,
     wants_tax_service, people, total_people, ...details } = payload;
   return {
+    client_type,
     tax_year: Number(tax_season), first_name: respondent_first_name,
     last_name: respondent_last_name, email, phone, wants_tax_service, people,
     people_count: total_people,
@@ -84,6 +85,7 @@ export function fromConfirmationRecord(row) {
     .map(item => ({ type: asText(item.type), person_id: asText(item.person_id), person_name: asText(item.person_name), note: asText(item.note) }));
   return {
     _record: row,
+    client_type: row.client_type || "returning_client",
     id: row.id, created_at: row.created_at, updated_at: row.updated_at,
     initial_response_at: row.initial_response_at, status: asText(row.status),
     tax_season: asText(row.tax_year), wants_tax_service: wants,
@@ -148,12 +150,21 @@ export function formatParticularitiesForDisplay(particularities = []) {
   }).join("\n");
 }
 
+// Keep the stored UTC calendar date consistent across CSV/Excel and browsers.
+export function formatExportDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()}`;
+}
+
 export function confirmationExportRow(row) {
   return {
     "Identifiant": row.id,
-    "Date de confirmation": row.created_at,
-    "Première réponse": row.initial_response_at,
-    "Dernière mise à jour": row.updated_at,
+    "Type de client": row.client_type || "returning_client",
+    "Date de confirmation": formatExportDate(row.created_at),
+    "Première réponse": formatExportDate(row.initial_response_at),
+    "Dernière mise à jour": formatExportDate(row.updated_at),
     "Statut": statusLabel(row.status),
     "Saison fiscale": row.tax_season,
     "Prise en charge demandée": responseLabel(row.wants_tax_service),
