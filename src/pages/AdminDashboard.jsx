@@ -197,6 +197,9 @@ export default function AdminDashboardPage() {
                   ["Réponses non", visibleConfirmations.filter(row => row.wants_tax_service === false).length],
                 ].map(([label, value]) => <MetricCard key={label} label={label} value={confirmationError ? "—" : value} />)}
               </div>
+              <div aria-label="Bilan des personnes" className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[["confirmed", "Places confirmées", "confirmed_count"], ["review", "Demandes à évaluer", "review_count"], ["verify", "À vérifier", "verify_count"]].map(([status, label, field]) => <Link key={status} to={`/admin/people?status=${status}`} className="rounded-xl border border-ma-separator bg-white p-4 text-sm"><span className="block font-bold">{label}</span><span className="mt-2 block text-2xl font-bold text-ma-primary">{confirmationError ? "—" : visibleConfirmations.reduce((total, row) => total + (row[field] || 0), 0)}</span></Link>)}
+              </div>
               <section aria-label="Dernières confirmations" className="mt-6 rounded-[22px] border border-ma-separator/60 bg-white p-6 shadow-[0_18px_45px_rgba(36,71,139,0.08)]">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div><h3 className="text-xl font-extrabold">Dernières confirmations</h3><p className="mt-1 text-sm text-ma-muted">Les dernières réponses reçues.</p></div>

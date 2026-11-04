@@ -1,3 +1,7 @@
+import AdminGSStrategies from "./pages/AdminGSStrategies.jsx";
+import DemoRedirect from "./pages/DemoRedirect.jsx";
+import PageMetadata from "./Components/PageMetadata.jsx";
+import AdminPeople from "./pages/AdminPeople.jsx";
 import AdminConfirmations from "./pages/AdminConfirmations.jsx";
 import AdminSubmissionsPage from "./pages/AdminSubmissionsPage.jsx";
 import AdminActivityLogsPage from "./pages/AdminActivityLogsPage.jsx";
@@ -233,6 +237,10 @@ function Contact() {
 }
 function Footer() { return <footer className="bg-linear-to-t from-0% to-blue-50"><div className="mx-auto w-full max-w-7xl p-4 md:py-8"><hr className="my-6 border-gray-700 lg:my-8" /><Link to="/politique-de-confidentialite" className="mb-4 block text-center text-sm text-blue-700 underline">Politique de confidentialité</Link><span className="block text-sm text-gray-800 sm:text-center">© {new Date().getFullYear()} <a href="https://adamcowen.com/" className="hover:underline">MartineAdamCPA™</a>. All Rights Reserved.</span></div></footer>; }
 
+function LandingPage() {
+  return <><Hero /><Services /><PromiseSection /><FAQ /><Contact /></>;
+}
+
 function ScrollToLocation() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
@@ -250,6 +258,7 @@ export default function App() {
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
   const isClientAccess = pathname === "/demande-acces" || pathname === "/ouverture-dossier";
   return <div>
+    <PageMetadata />
     <ScrollToLocation />
     {!isAdmin && !isClientAccess && <NavBar />}
     <Routes>
@@ -262,9 +271,13 @@ export default function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/confirmations" element={<AdminConfirmations />} />
         <Route path="/admin/submissions" element={<AdminSubmissionsPage />} />
+        <Route path="/admin/people" element={<AdminPeople />} />
+        <Route path="/admin/gs-strategies" element={<AdminGSStrategies />} />
         <Route path="/admin/logs" element={<AdminActivityLogsPage />} />
       </Route>
-      <Route path="/" element={<><Hero /><Services /><PromiseSection /><FAQ /><Contact /></>} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/demo-redirect" element={<DemoRedirect><LandingPage /></DemoRedirect>} />
+      <Route path="/demo -redirect" element={<DemoRedirect><LandingPage /></DemoRedirect>} />
       <Route path="/confirm-client" element={<ClientChoicePage />} />
       <Route path="/confirm-client/formulaire" element={<ConfirmationClient />} />
       <Route path="/confirm-client/merci" element={<ConfirmClientSuccessPage />} />

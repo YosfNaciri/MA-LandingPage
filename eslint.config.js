@@ -8,13 +8,13 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist', 'test-results', 'playwright-report']),
   {
-    files: ['src/pages/**/*.jsx', 'src/lib/**/*.js', 'src/Components/EditConfirmation.jsx', 'src/Components/AdminLayout.jsx', 'src/Components/ProtectedAdminRoute.jsx'],
+    files: ['src/pages/**/*.jsx', 'src/lib/**/*.js', 'src/Components/ConfirmationReceiptStatus.jsx', 'src/Components/EditConfirmation.jsx', 'src/Components/AdminLayout.jsx', 'src/Components/ProtectedAdminRoute.jsx'],
     extends: [js.configs.recommended, reactHooks.configs['recommended-latest']],
     languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } }, globals: globals.browser },
     rules: { 'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z]' }] },
   },
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

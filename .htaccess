@@ -39,3 +39,9 @@ Options -MultiViews -Indexes
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set X-Frame-Options "SAMEORIGIN"
 </IfModule>
+
+# Keep confirmation routes accessible to clients but out of search results.
+# THE_REQUEST preserves the original path through the SPA rewrite to index.html.
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, follow" "expr=%{THE_REQUEST} =~ m#\s/+((confirm-client|confirmation-client)(/|[?\s]))#"
+</IfModule>

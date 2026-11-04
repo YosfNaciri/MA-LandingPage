@@ -1,7 +1,9 @@
+import { BUSINESS_NAME, calculatePeople, statusCounts, PERSON_STATUS, personWarning, buildReceipt } from "../lib/confirmationRules";
+import { submitConfirmation } from "../lib/submitConfirmation";
 import { toConfirmationRecord } from "../lib/clientConfirmations";
 import { useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { confirmClientTable, getSupabaseClient } from "../lib/supabaseClient";
+import { getSupabaseClient } from "../lib/supabaseClient";
 
 const inputClass =
   "mt-2 w-full rounded-lg border border-slate-200/75 bg-white px-4 py-3.5 text-gray-800 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/15";
@@ -19,11 +21,6 @@ const relationLabels = {
   other: "Autre personne déjà cliente",
 };
 
-const preparedLabels = {
-  yes: "Ancien client 2025",
-  no: "Ajout à valider",
-  unknown: "À vérifier",
-};
 
 const particularityLabels = {
   self_employed: "Travail autonome",
@@ -50,7 +47,7 @@ function PageLayout({ children, showBack = false }) {
           {children}
         </section>
         <p className="mt-6 text-center text-sm text-gray-600">
-          Martine Adam CPA · Préparation de votre prochaine saison fiscale
+          {BUSINESS_NAME} · Préparation de votre prochaine saison fiscale
         </p>
       </div>
     </main>
@@ -139,6 +136,8 @@ function PersonCard({
   allowSelf,
   hasSpouse,
   lockRelation,
+  calculatedStatus,
+  clientType,
 }) {
   const isRespondent = person.relation === "self";
   const canSkipSin =
@@ -213,9 +212,7 @@ function PersonCard({
             }
             className={inputClass}
           >
-            <option value="self" disabled={!allowSelf}>
-              Moi-même
-            </option>
+            {allowSelf && <option value="self">Moi-même</option>}
             <option
               value="spouse"
               disabled={hasSpouse && person.relation !== "spouse"}
@@ -233,11 +230,12 @@ function PersonCard({
             htmlFor={`person-${person.id}-prepared`}
             className="block text-sm font-bold"
           >
-            Avons-nous préparé ses impôts 2025 ? *
+            {isRespondent ? "Avons-nous préparé vos impôts 2025 ?" : "Avons-nous préparé ses impôts 2025 ?"} *
           </label>
           <select
             id={`person-${person.id}-prepared`}
-            value={person.prepared2025}
+            value={clientType === "new_client" && isRespondent ? "no" : person.prepared2025}
+            disabled={clientType === "new_client" && isRespondent}
             required
             onChange={(event) => onChange({ prepared2025: event.target.value })}
             className={inputClass}
@@ -245,13 +243,15 @@ function PersonCard({
             <option value="" disabled>
               Sélectionnez une réponse
             </option>
-            <option value="yes">Oui</option>
+            {!(clientType === "new_client" && isRespondent) && <option value="yes">Oui</option>}
             <option value="no">Non</option>
-            <option value="unknown">Je ne sais pas</option>
+            {!(clientType === "new_client" && isRespondent) && <option value="unknown">Je ne sais pas</option>}
           </select>
         </div>
       </div>
 
+      <p className="mt-4 text-sm font-bold">Statut : {PERSON_STATUS[calculatedStatus]}</p>
+      {personWarning(calculatedStatus, isRespondent) && <p className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{personWarning(calculatedStatus, isRespondent)}</p>}
       {!["self", "spouse"].includes(person.relation) && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
@@ -373,10 +373,10 @@ function particularitiesPayload(selected, details, people, respondent) {
 
 export default function ConfirmClientPage({ clientType = "returning_client" }) {
   const navigate = useNavigate();
-  const [wantsService, setWantsService] = useState("");
+  const [wantsService, setWantsService] = useState(clientType === "new_client" ? "yes" : "");
   const [declineScope, setDeclineScope] = useState("");
   const [respondent, setRespondent] = useState({ firstName: "", lastName: "" });
-  const [people, setPeople] = useState([emptyPerson(1, "self")]);
+  const [people, setPeople] = useState([{ ...emptyPerson(1, "self"), prepared2025: clientType === "new_client" ? "no" : "" }]);
   const [nextPersonId, setNextPersonId] = useState(2);
   const [coupleSinPersonId, setCoupleSinPersonId] = useState(1);
   const [coupleSinLastThree, setCoupleSinLastThree] = useState("");
@@ -396,13 +396,10 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
   const childrenCount = people.filter(
     (person) => person.relation === "child",
   ).length;
-  const oldClientsCount = people.filter(
-    (person) => person.prepared2025 === "yes",
-  ).length;
-  const toValidateCount = people.filter(
-    (person) =>
-      person.prepared2025 === "no" || person.prepared2025 === "unknown",
-  ).length;
+  const calculatedPeople = calculatePeople(people, wantsService === "yes");
+  const counts = statusCounts(calculatedPeople);
+  const oldClientsCount = counts.confirmed;
+  const toValidateCount = counts.review + counts.verify;
   const activePeople = useMemo(
     () =>
       people.filter(
@@ -542,6 +539,9 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
       respondent_last_name: respondent.lastName.trim(),
       people: peoplePayload(activePeople, respondent),
       total_people: activePeople.length,
+      confirmed_count: counts.confirmed,
+      review_count: counts.review,
+      verify_count: counts.verify,
       old_clients_count: oldClientsCount,
       to_validate_count: toValidateCount,
       is_couple: hasSpouse,
@@ -578,7 +578,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
               wants_tax_service: false,
               first_name: respondent.firstName.trim(),
               last_name: respondent.lastName.trim(),
-              email: email.trim(),
+              email: noEmail ? null : email.trim(),
               phone: phone.trim(),
               people: [
                 {
@@ -594,7 +594,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                 decline_scope: "self",
                 sin_last_three: declineSin,
                 identification_person_name: `${respondent.firstName.trim()} ${respondent.lastName.trim()}`,
-                no_email: false,
+                no_email: noEmail,
                 document_method: "not_applicable",
                 particularities: [],
                 old_clients_count: 0,
@@ -607,13 +607,11 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
               status: "completed",
             }
           : toConfirmationRecord(payload);
-      const { error } = await supabase.from(confirmClientTable).insert(record);
-
-      if (error) throw error;
+      const saved = await submitConfirmation(supabase, record);
 
       navigate("/confirmation-client/merci", {
         replace: true,
-        state: { validated: true, wantsService: wantsService === "yes" },
+        state: { validated: true, wantsService: wantsService === "yes", receipt: buildReceipt(saved.receipt_snapshot) },
       });
     } catch (error) {
       const setupError = [
@@ -640,7 +638,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
         Impôts 2026
       </p>
       <h1 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">
-        Confirmez votre place
+        Confirmez votre intention
       </h1>
       <p className="mt-4 leading-7 text-gray-600">
         Indiquez si vous souhaitez nous confier vos impôts 2026 et quelles
@@ -652,6 +650,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
         </strong>{" "}
         Si vous ne confirmez pas votre intention, nous ne pouvons pas garantir
         que votre dossier sera traité pour la prochaine saison fiscale.
+        {" "}Votre réponse confirme votre place si nous avons préparé vos impôts 2025. Votre conjoint ou conjointe est aussi inclus. L'ajout d'un enfant ou d'un parent constitue une demande, que notre équipe évaluera selon ses disponibilités. Répondez au plus tard le 30 novembre 2026.
       </div>
 
       <form onSubmit={handleSubmit} aria-busy={loading} className="mt-8">
@@ -660,7 +659,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
             Les champs marqués d’un astérisque (*) sont obligatoires.
           </p>
 
-          <Choices
+          {clientType !== "new_client" && <Choices
             legend="Souhaitez-vous nous confier vos impôts 2026 ?"
             name="wants-service"
             value={wantsService}
@@ -669,7 +668,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
               ["yes", "Oui"],
               ["no", "Non"],
             ]}
-          />
+          />}
 
           {wantsService === "no" && (
             <fieldset className="space-y-5">
@@ -724,11 +723,14 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                 label="Adresse courriel"
                 id="email"
                 type="email"
+                required={!noEmail}
+                disabled={noEmail}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 maxLength={254}
               />
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={noEmail} onChange={event => setNoEmail(event.target.checked)} />Je n’ai pas de courriel</label>
               <Field
                 label="Trois derniers chiffres du NAS"
                 id="decline-sin"
@@ -808,9 +810,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                   </legend>
                   <p className="text-sm leading-6 text-gray-600">
                     Inscrivez chaque personne une seule fois. Le nombre total
-                    est calculé automatiquement. Les nouveaux dossiers
-                    concernant les parents ou les enfants devront être validés
-                    par notre équipe avant toute réservation.
+                    est calculé automatiquement. Ajouter un enfant ou un parent dont nous n'avons pas préparé les impôts 2025 ne lui réserve pas de place. Il s'agit d'une demande que notre équipe évaluera. Nous vous confirmerons notre réponse avant le début de la saison fiscale.
                   </p>
                   <p className="text-sm leading-6 text-gray-600">
                   Inscrire seulement les enfants pour lesquels une déclaration
@@ -822,6 +822,8 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                     <PersonCard
                       key={person.id}
                       person={person}
+                      clientType={clientType}
+                      calculatedStatus={calculatedPeople.find(item => item.id === person.id)?.calculated_status}
                       index={index}
                       respondent={respondent}
                       onChange={(patch) => updatePerson(person.id, patch)}
@@ -864,7 +866,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                     </div>
                   )}
                   <p className="rounded-xl bg-white p-4 text-sm font-bold text-blue-600">
-                    Total : {activePeople.length} personne(s)
+                    Total : {people.length} personne(s)
                   </p>
                 </fieldset>
               )}
@@ -1142,18 +1144,14 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
                     Vérification avant envoi
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-gray-600">
-                    Total : <strong>{activePeople.length}</strong> personne(s).
-                    Anciens clients : <strong>{oldClientsCount}</strong>. Ajouts
-                    ou réponses à vérifier : <strong>{toValidateCount}</strong>.
+                    Places confirmées : <strong>{counts.confirmed}</strong> · Demandes à évaluer : <strong>{counts.review}</strong> · À vérifier : <strong>{counts.verify}</strong>
                   </p>
                   <ul className="mt-4 space-y-2 text-sm">
-                    {activePeople.map((person) => (
+                    {people.map((person) => (
                       <li key={person.id} className="rounded-xl bg-white p-3">
                         <strong>{personName(person, respondent)}</strong> ·{" "}
                         {relationLabels[person.relation]} ·{" "}
-                        {person.prepared2025
-                          ? preparedLabels[person.prepared2025]
-                          : "Impôts 2025 non répondu"}
+                        {PERSON_STATUS[calculatedPeople.find(item => item.id === person.id)?.calculated_status]}
                       </li>
                     ))}
                   </ul>
@@ -1191,7 +1189,7 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
 
 export function ConfirmClientSuccessPage() {
   const { state } = useLocation();
-  if (!state?.validated) return <Navigate to="/confirmation-client" replace />;
+  if (!state?.validated || !state?.receipt) return <Navigate to="/confirmation-client" replace />;
   return (
     <PageLayout>
       <div className="text-center">
@@ -1204,16 +1202,7 @@ export function ConfirmClientSuccessPage() {
         <h1 className="mt-6 text-3xl font-extrabold tracking-[-0.04em]">
           Merci !
         </h1>
-        <p className="mt-4 leading-7 text-gray-600">
-          Merci d’avoir rempli le formulaire de confirmation pour les impôts
-          2026. Votre réponse a été enregistrée.
-        </p>
-        {state.wantsService && (
-          <p className="mt-5 rounded-xl bg-blue-50 p-4 text-sm leading-6 text-gray-600">
-            Un membre de l’équipe pourra communiquer avec vous si des
-            renseignements supplémentaires sont nécessaires.
-          </p>
-        )}
+        {(state.receipt?.paragraphs || []).map((paragraph, index) => <p key={index} className="mt-4 break-words leading-7 text-gray-600">{paragraph}</p>)}
         <Link to="/" className={`${buttonClass} mt-8`}>
           Retour à l’accueil
         </Link>

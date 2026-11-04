@@ -1,3 +1,4 @@
+import { calculatePeople, statusCounts, PERSON_STATUS } from "../lib/confirmationRules";
 import { useEffect, useRef, useState } from 'react';
 import { confirmClientTable, getSupabaseClient } from '../lib/supabaseClient';
 import { createConfirmationDraft, saveConfirmation } from '../lib/editConfirmation';
@@ -46,6 +47,8 @@ export default function EditConfirmation({ row, onSaved, onClose }) {
     } catch (failure) { setError(failure.message || 'Impossible d’enregistrer les modifications.'); }
     finally { pending.current = false; setSaving(false); }
   }
+  const statuses = calculatePeople(draft.people, row.wants_tax_service);
+  const counts = statusCounts(statuses);
   const nameOf = person => person.relation === 'self'
     ? `${draft.first_name} ${draft.last_name}`.trim() || 'Moi-même' : personFullName(person);
   return <dialog ref={dialog} aria-labelledby="edit-confirmation-title" onCancel={event => { event.preventDefault(); close(); }} className="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto rounded-2xl bg-white p-5 text-gray-800 shadow-xl backdrop:bg-black/40 sm:p-8">
@@ -63,8 +66,10 @@ export default function EditConfirmation({ row, onSaved, onClose }) {
         </section>
         <section className="space-y-3 border-t border-slate-200 pt-5" aria-label="Personnes concernées à modifier">
           <h3 className="text-lg font-bold text-blue-700">Personnes concernées</h3>
+          <p className="text-sm">Places confirmées : {counts.confirmed} · Demandes à évaluer : {counts.review} · À vérifier : {counts.verify}</p>
           {draft.people.map((person, index) => <div key={person.id} className="rounded-xl bg-blue-50 p-4">
             <div className="mb-3 flex items-center justify-between gap-2"><h4 className="font-semibold">Personne {index + 1}</h4><button type="button" onClick={() => removePerson(index)} className={redButton} aria-label={`Retirer la personne ${index + 1}`}>Retirer</button></div>
+            <p className="mb-3 text-sm font-bold">{PERSON_STATUS[statuses[index].calculated_status] || "Refus de service — hors capacité"}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={`Prénom de la personne ${index + 1}`} value={person.relation === 'self' ? draft.first_name : person.first_name} onChange={event => person.relation === 'self' ? change({ first_name: event.target.value }) : changePerson(index, { first_name: event.target.value })} required maxLength={100} />
               <Field label={`Nom de la personne ${index + 1}`} value={person.relation === 'self' ? draft.last_name : person.last_name} onChange={event => person.relation === 'self' ? change({ last_name: event.target.value }) : changePerson(index, { last_name: event.target.value })} required maxLength={100} />

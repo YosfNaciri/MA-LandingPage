@@ -1,16 +1,25 @@
 import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { getSupabaseClient } from "../lib/supabaseClient";
 
 const navItems = [
   { to: "/admin/dashboard", label: "Dashboard", icon: DashboardIcon },
   { to: "/admin/submissions", label: "Soumissions", icon: FilesIcon },
-  { to: "/admin/confirmations", label: "Confirmations", icon: FilesIcon },
+  {
+    to: "/admin/confirmations", label: "Confirmations", icon: FilesIcon,
+    children: [
+      { status: "confirmed", label: "Capacité" },
+      { status: "review", label: "Demandes à évaluer" },
+      { status: "verify", label: "À vérifier" },
+    ],
+  },
+  { to: "/admin/gs-strategies", label: "GS Strategies", icon: FilesIcon },
   { to: "/admin/logs", label: "Logs d’activité", icon: ActivityIcon },
 ];
 
 export default function AdminLayout({ subtitle, children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const supabase = getSupabaseClient();
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
 
@@ -26,6 +35,9 @@ export default function AdminLayout({ subtitle, children }) {
   }
 
   const showLabels = !collapsed;
+  const peoplePage = location.pathname === "/admin/people";
+  const confirmationsOpen = peoplePage || location.pathname === "/admin/confirmations";
+  const personStatus = new URLSearchParams(location.search).get("status") || "confirmed";
 
   return (
     <div
@@ -36,7 +48,7 @@ export default function AdminLayout({ subtitle, children }) {
     >
       <aside
         className={[
-          "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-ma-separator/60 bg-white/95 px-3 py-5 shadow-[8px_0_30px_rgba(36,71,139,0.06)] backdrop-blur transition-[width,padding] duration-200",
+          "fixed left-0 top-0 z-40 flex h-screen flex-col overflow-y-auto border-r border-ma-separator/60 bg-white/95 px-3 py-5 shadow-[8px_0_30px_rgba(36,71,139,0.06)] backdrop-blur transition-[width,padding] duration-200",
           collapsed ? "w-20" : "w-72",
         ].join(" ")}
       >
@@ -49,9 +61,9 @@ export default function AdminLayout({ subtitle, children }) {
                 ? "grid h-12 flex-1 place-items-center text-lg"
                 : "flex-1 px-2 py-1 text-xl",
             ].join(" ")}
-            title="Martine Adam CPA"
+            title="GS Admin"
           >
-            {showLabels ? "Martine Adam CPA" : "MA"}
+            {showLabels ? "GS Admin" : "GS"}
           </Link>
 
           {!collapsed && (
@@ -87,15 +99,18 @@ export default function AdminLayout({ subtitle, children }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
+              <div key={item.to}>
+                <div className="flex items-center">
               <NavLink
-                key={item.to}
                 to={item.to}
                 title={item.label}
+                aria-expanded={item.children ? showLabels && confirmationsOpen : undefined}
+                aria-controls={item.children ? "confirmation-submenu" : undefined}
                 className={({ isActive }) =>
                   [
-                    "flex h-12 items-center gap-3 rounded-[10px] text-sm font-extrabold transition",
+                    "flex h-12 min-w-0 flex-1 items-center gap-3 rounded-[10px] text-sm font-extrabold transition",
                     collapsed ? "justify-center" : "justify-start px-4",
-                    isActive
+                    (isActive || (item.children && peoplePage))
                       ? "bg-ma-primary text-white"
                       : "text-ma-muted hover:bg-ma-bg hover:text-ma-primary",
                   ].join(" ")
@@ -103,7 +118,26 @@ export default function AdminLayout({ subtitle, children }) {
               >
                 <Icon />
                 {showLabels && <span>{item.label}</span>}
+                {item.children && showLabels && (
+                  <span className="ml-auto" aria-hidden="true">{confirmationsOpen ? "▾" : "▸"}</span>
+                )}
               </NavLink>
+                </div>
+                {item.children && showLabels && confirmationsOpen && (
+                  <ul id="confirmation-submenu" aria-label="Sous-menu Confirmations" className="ml-6 mt-1 space-y-1 border-l border-ma-separator pl-3">
+                    {item.children.map(child => {
+                      const active = peoplePage && personStatus === child.status;
+                      return <li key={child.status}>
+                        <Link
+                          to={`/admin/people?status=${child.status}`}
+                          aria-current={active ? "page" : undefined}
+                          className={`flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-semibold ${active ? "bg-ma-primary/10 text-ma-primary" : "text-ma-muted hover:bg-ma-bg hover:text-ma-primary"}`}
+                        >{child.label}</Link>
+                      </li>;
+                    })}
+                  </ul>
+                )}
+              </div>
             );
           })}
         </nav>

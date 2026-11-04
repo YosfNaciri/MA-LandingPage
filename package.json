@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "check:supabase": "node scripts/check-supabase.mjs",
-    "test:admin-data": "node --test tests/unit/*.mjs"
+    "test:admin-data": "node --test tests/unit/*.mjs",
+    "test:sql": "node --test tests/sql/*.mjs"
   },
   "dependencies": {
     "@fillout/react": "^3.0.0",
@@ -29,6 +30,7 @@
     "tsparticles-slim": "^2.12.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.11",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.64.0",
     "@types/node": "^24.10.0",

@@ -1,3 +1,4 @@
+import { calculatePeople, statusCounts } from "./confirmationRules.js";
 import { confirmationColumns, fromConfirmationRecord, personFullName } from './clientConfirmations.js';
 
 export function createConfirmationDraft(row) {
@@ -55,7 +56,8 @@ export function buildConfirmationUpdate(row, draft) {
   const branch = row.wants_tax_service ? 'yes_data' : 'no_data';
   const original = row._record[branch];
   const details = original && typeof original === 'object' && !Array.isArray(original) ? original : {};
-  const oldCount = people.filter(person => person.prepared_2025 === 'yes').length;
+  const counts = statusCounts(calculatePeople(people, row.wants_tax_service));
+  const oldCount = counts.confirmed;
   const children = people.filter(person => person.relation === 'child').length;
   return {
     first_name: draft.first_name.trim(), last_name: draft.last_name.trim(),
@@ -66,7 +68,8 @@ export function buildConfirmationUpdate(row, draft) {
       identification_person_name: ownerName || null, sin_last_three: draft.sin_last_three || null,
       document_method: draft.document_method || (row.wants_tax_service ? 'unknown' : 'not_applicable'),
       document_method_note: draft.document_method_note.trim() || null,
-      old_clients_count: oldCount, to_validate_count: people.length - oldCount,
+      old_clients_count: oldCount, to_validate_count: counts.review + counts.verify,
+      confirmed_count: counts.confirmed, review_count: counts.review, verify_count: counts.verify,
       children_count: children, has_children: children > 0, is_couple: people.some(person => person.relation === 'spouse'),
     },
   };

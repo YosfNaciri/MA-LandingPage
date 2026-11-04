@@ -1,0 +1,3 @@
+[functions.send-confirmation-receipts]
+# Authentification par secret serveur dédié, contrôlé dans la fonction.
+verify_jwt = false

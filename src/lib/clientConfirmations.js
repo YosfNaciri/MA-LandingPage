@@ -1,3 +1,4 @@
+import { calculatePeople, statusCounts, PERSON_STATUS, normalizePersonKeys } from "./confirmationRules.js";
 export const relationLabels = {
   self: "Moi-même",
   spouse: "Conjoint ou conjointe",
@@ -70,7 +71,7 @@ export function formatConfirmationDate(value, withTime = false) {
 export function fromConfirmationRecord(row) {
   const wants = row.wants_tax_service === true ? true : row.wants_tax_service === false ? false : null;
   const details = asObject(wants === true ? row.yes_data : wants === false ? row.no_data : null);
-  const people = (Array.isArray(row.people) ? row.people : [])
+  const peopleInput = normalizePersonKeys(row.people)
     .filter(person => person && typeof person === "object" && !Array.isArray(person))
     .map(person => ({
       id: asText(person.id), first_name: asText(person.first_name), last_name: asText(person.last_name),
@@ -78,7 +79,9 @@ export function fromConfirmationRecord(row) {
       sin_unknown: person.sin_unknown === true, sin_last_three: asText(person.sin_last_three),
       contact: asText(person.contact),
     }));
-  const oldCount = people.filter(person => person.prepared_2025 === "yes").length;
+  const people = calculatePeople(peopleInput, wants === true);
+  const counts = statusCounts(people);
+  const oldCount = counts.confirmed;
   const children = people.filter(person => person.relation === "child").length;
   const particularities = (Array.isArray(details.particularities) ? details.particularities : [])
     .filter(item => item && typeof item === "object" && !Array.isArray(item))
@@ -92,8 +95,9 @@ export function fromConfirmationRecord(row) {
     respondent_first_name: asText(row.first_name), respondent_last_name: asText(row.last_name),
     email: asText(row.email), phone: asText(row.phone), people,
     total_people: count(row.people_count, people.length),
-    old_clients_count: count(details.old_clients_count, oldCount),
-    to_validate_count: count(details.to_validate_count, people.length - oldCount),
+    old_clients_count: oldCount,
+    to_validate_count: counts.review + counts.verify,
+    confirmed_count: counts.confirmed, review_count: counts.review, verify_count: counts.verify,
     is_couple: typeof details.is_couple === "boolean" ? details.is_couple : people.some(person => person.relation === "spouse"),
     has_children: typeof details.has_children === "boolean" ? details.has_children : children > 0,
     children_count: count(details.children_count, children),
@@ -136,7 +140,7 @@ export function formatPeopleForDisplay(people = []) {
     const prepared = prepared2025Labels[person.prepared_2025] || person.prepared_2025 || "Non répondu";
     const sin = person.sin_unknown ? "NAS inconnu" : person.sin_last_three ? `NAS ***${person.sin_last_three}` : "NAS non fourni";
     const contact = person.contact ? `, coordonnées: ${person.contact}` : "";
-    return `${index + 1}. ${personFullName(person)} (${relation}) - impôts 2025: ${prepared}, ${sin}${contact}`;
+    return `${index + 1}. ${personFullName(person)} (${relation}) - impôts 2025: ${prepared}, statut: ${PERSON_STATUS[person.calculated_status] || "Non applicable"}, ${sin}${contact}`;
   }).join("\n");
 }
 
@@ -177,7 +181,10 @@ export function confirmationExportRow(row) {
     "Avec enfants": yesNo(row.has_children),
     "Nombre d’enfants": row.children_count || 0,
     "Nombre total de personnes": row.total_people || 0,
-    "Anciens clients 2025": row.old_clients_count || 0,
+    "Anciens clients 2025": (row.people || []).filter(person => person.prepared_2025 === "yes").length,
+    "Places confirmées": row.confirmed_count || 0,
+    "Demandes à évaluer": row.review_count || 0,
+    "À vérifier": row.verify_count || 0,
     "Ajouts / à vérifier": row.to_validate_count || 0,
     "Personnes concernées": formatPeopleForDisplay(row.people),
     "Identification NAS appartient à": row.identification_person_name || "",

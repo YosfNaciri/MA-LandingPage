@@ -1,3 +1,9 @@
+# Évolution des confirmations — octobre 2026
+
+La livraison additive du formulaire, de l’administration et de Supabase est décrite dans [docs/confirmations-2026.md](docs/confirmations-2026.md), avec l’ordre exact des trois nouvelles migrations, les secrets serveur, les tests et les validations métier restantes.
+
+**Base existante : ne pas rejouer les anciennes migrations ni réinitialiser Supabase.** Auditer la base en lecture seule et obtenir l’accord du propriétaire avant toute migration distante ou tout déploiement. L’accusé automatique est désactivé par défaut. Les sections ci-dessous restent la documentation historique du projet.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

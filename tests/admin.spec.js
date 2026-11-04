@@ -32,6 +32,7 @@ async function api(page, { admin = true, failLogin = false, failRead = false, de
   });
   await page.route('**/rest/v1/**', async (route) => {
     if (new URL(route.request().url()).pathname.includes('client_intake_')) return route.fulfill({ json: [] });
+    if (new URL(route.request().url()).pathname.includes('confirmation_receipts')) return route.fulfill({json: []});
     reads++;
     if (failRead) return route.fulfill({ status: 403, json: { code: '42501', message: 'denied' } });
     const url = new URL(route.request().url());
@@ -246,7 +247,7 @@ for (const updateMode of ['error', 'conflict']) {
 }
 
 
-test('dashboard source : statistiques, soumissions, statut et historique', async ({ page }) => {
+test('dashboard source : statistiques, soumissions, statut et historique', async ({ page }, testInfo) => {
   await api(page);
   const record = { id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), nom_legal: 'Client Nouveau', courriel: 'nouveau@example.test', telephone: '5145550100', type_client: 'Particulier', status: 'Nouveau', payload: { form_data: { nom_legal: 'Client Nouveau', type_client: 'particulier' }, repeat_data: {} } };
   let history = [];
@@ -286,6 +287,11 @@ test('dashboard source : statistiques, soumissions, statut et historique', async
 
   await page.getByRole('link', { name: 'Soumissions', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Client Nouveau', exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('soumission-desktop.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('soumission-mobile.png'), fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator('select').last().selectOption('En révision');
   await expect(page.locator('select').last()).toHaveValue('En révision');
   await page.getByRole('link', { name: 'Logs d’activité', exact: true }).click();
@@ -330,4 +336,83 @@ with zipfile.ZipFile(sys.argv[1]) as z:
  assert text==['Date de confirmation','Nom du répondant'], text
  assert '12/10/2026' in ''.join(root.itertext())
 `, excelPath]);
+});
+
+async function peopleApi(page, {failSave=false}={}) {
+ await api(page);
+ const response={id:'response-person',first_name:'Camille',last_name:'Répondant',phone:'0123456789',email:'camille@example.test',client_type:'new_client',tax_year:2026,wants_tax_service:true,created_at:'2026-10-26T12:00:00Z'};
+ const people=['confirmed','verify','review'].map((status,index)=>({id:`person-${index}`,response_id:response.id,person_key:String(index+1),first_name:`Personne ${status}`,last_name:'Test',relation:index?'child':'self',prepared_2025:index?'unknown':'yes',calculated_status:status,cabinet_decision:null,decision_at:null,cabinet_response_sent:false,cabinet_response_sent_at:null,version:1,response}));
+ let patch;
+ await page.route('**/rest/v1/client_confirmation_people*',route=>{
+  const url=new URL(route.request().url());
+  if(route.request().method()==='PATCH'){
+   patch=route.request().postDataJSON();expect(url.searchParams.get('version')).toBe('eq.1');
+   if(failSave)return route.fulfill({json:[]});
+   const row=people.find(p=>`eq.${p.id}`===url.searchParams.get('id'));
+   Object.assign(row,patch,{version:2,decision_at:'2026-10-26T12:00:00Z',cabinet_response_sent_at:patch.cabinet_response_sent?'2026-10-26T12:00:00Z':null});
+   return route.fulfill({json:[row]});
+  }
+  const offset=Number(url.searchParams.get('offset')||0);return route.fulfill({json:people.slice(offset,offset+1)});
+ });
+ return {people,patch:()=>patch};
+}
+for(const status of ['confirmed','verify','review'])test(`Vue ${status} et export Excel filtré par personne`,async({page},testInfo)=>{
+ await peopleApi(page);await login(page,false);await expect(page).toHaveURL('/admin/dashboard');await page.goto(`/admin/people?status=${status}`);
+ await expect(page.getByRole('heading',{name:`Personne ${status} Test`,exact:true})).toBeVisible();
+ for(const other of ['confirmed','verify','review'].filter(value=>value!==status))await expect(page.getByRole('heading',{name:`Personne ${other} Test`,exact:true})).toHaveCount(0);
+ await page.getByRole('region',{name:'Filtres des personnes'}).getByLabel('Rechercher',{exact:true}).fill(status);
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'Exporter cette vue en Excel'}).click();
+ const file=await pending;const path=testInfo.outputPath('personnes.xlsx');await file.saveAs(path);
+ execFileSync('python3',['-c',`import zipfile,sys,xml.etree.ElementTree as E
+with zipfile.ZipFile(sys.argv[1]) as z:
+ root=E.fromstring(z.read('xl/worksheets/sheet1.xml'));ns={'s':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+ rows=root.findall('s:sheetData/s:row',ns);assert len(rows)==2
+ text=''.join(root.itertext());assert 'response-person' in text and '0123456789' in text and sys.argv[2] in text
+ assert not root.findall('.//s:f',ns)
+`,path,`Personne ${status}`]);
+});
+for(const failSave of [false,true])test(`Décision et suivi cabinet : ${failSave?'conflit conservé':'enregistrement séparé'}`,async({page})=>{
+ const mock=await peopleApi(page,{failSave});await login(page,false);await expect(page).toHaveURL('/admin/dashboard');await page.goto('/admin/people?status=review');
+ await page.getByRole('combobox',{name:'Décision du cabinet',exact:true}).selectOption('Accepté');
+ await page.getByLabel('Réponse du cabinet envoyée (suivi manuel)',{exact:true}).check();
+ await page.getByRole('button',{name:'Enregistrer le suivi'}).click();
+ expect(mock.patch()).toEqual({cabinet_decision:'Accepté',cabinet_response_sent:true});
+ if(failSave)await expect(page.getByRole('alert')).toContainText('Enregistrement non confirmé');
+ else { await expect(page.getByText('Décision : 26/10/2026',{exact:true})).toBeVisible(); await expect(page.getByText('Réponse : 26/10/2026',{exact:true})).toBeVisible(); }
+ await expect(page.getByRole('heading',{name:'Personne review Test',exact:true})).toBeVisible();
+});
+test('vues personnes : mobile sans débordement',async({page},testInfo)=>{
+ await page.setViewportSize({width:375,height:844});await peopleApi(page);await login(page,false);await expect(page).toHaveURL('/admin/dashboard');await page.goto('/admin/people?status=review');
+ await expect(page.getByRole('heading',{name:'Personne review Test'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('personnes-mobile.png'),fullPage:true});
+});
+
+test('GS Strategies : JSON, recherche, statut et suppression Supabase', async ({ page }) => {
+  await api(page);
+  let record = { id:'33333333-3333-3333-3333-333333333333', created_at:'2026-11-04T12:00:00Z', form_key:'sellerFormFR', form_name:'Vente', status:'new', answers:{prenom:{label:'Prénom',value:'Camille'},nom:'Vendeur',courriel:'camille@example.test',nom_cabinet:'Cabinet GS',prix:{label:'Prix demandé',value:'250000',section:'Projet de vente'}} };
+  await page.route('**/rest/v1/form_submissions?**', async route => {
+    const req=route.request(),url=new URL(req.url());
+    if(req.method()==='PATCH') { expect(req.postDataJSON()).toEqual({status:'in_progress'});expect(url.searchParams.get('status')).toBe('eq.new');record={...record,...req.postDataJSON()};return route.fulfill({json:record}); }
+    if(req.method()==='DELETE') { const id=record.id;record=null;return route.fulfill({json:[{id}]}); }
+    if(url.searchParams.get('id')?.startsWith('eq.')) return route.fulfill({json:record});
+    return route.fulfill({json:record?[url.searchParams.get('select')==='id'?{id:record.id}:record]:[]});
+  });
+  await login(page,false);
+  await page.goto('/admin/gs-strategies');
+  await expect(page.getByRole('heading',{name:'GS Strategies',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:/Camille Vendeur/}).click();
+  await expect(page.getByText('Prix demandé',{exact:true})).toBeVisible();
+  await expect(page.getByText('250000',{exact:true})).toBeVisible();
+  await page.getByLabel('Modifier le statut').selectOption('in_progress');
+  await page.getByRole('button',{name:'Enregistrer le statut'}).click();
+  await expect(page.getByRole('status')).toHaveText('Statut enregistré dans Supabase.');
+  await page.getByRole('button',{name:'Retour à la liste'}).click();
+  await page.getByRole('button',{name:'Soumissions',exact:true}).click();
+  await page.getByLabel('Rechercher les soumissions GS Strategies').fill('250000');
+  await page.getByRole('button',{name:'Appliquer',exact:true}).click();
+  await page.getByRole('button',{name:/Camille Vendeur/}).click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'Supprimer la soumission'}).click();
+  await expect(page.getByText('Aucune soumission trouvée.')).toBeVisible();
 });
