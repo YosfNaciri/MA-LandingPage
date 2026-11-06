@@ -19,7 +19,8 @@ import { motion } from "motion/react";
 import { FilloutStandardEmbed } from "@fillout/react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import logo from "./assets/MACPA.jpeg";
+import BrandLogos from "./Components/BrandLogos.jsx";
+import AxoluAnnouncement from "./Components/AxoluAnnouncement.jsx";
 import experienceImg from "./assets/optimisation-experience-utilisateur.jpg";
 import securityImg from "./assets/securitinformatiqueAdobeStock58947296jpeg_604e4ae99bb8f.jpeg";
 import qualityImg from "./assets/audit-comptable-et-financier.webp";
@@ -51,8 +52,8 @@ function NavBar() {
   return (
     <nav className={`fixed top-0 z-50 w-full bg-white/80 text-gray-800 backdrop-blur transition-transform duration-500 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
       <div className="mx-auto flex max-w-[1450px] items-center justify-center p-5 md:justify-between">
-        <MotionLink to="/#Home" className="z-20 flex items-center gap-3 md:w-100" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
-          <img src={logo} alt="Martine Adam CPA" className="h-10 md:h-15" />
+        <MotionLink to="/#Home" className="z-20 flex items-center gap-3 min-w-0" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
+          <BrandLogos />
         </MotionLink>
         <motion.div className="hidden items-center gap-4 md:flex" initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }}>
           <Link className="cursor-pointer rounded-md bg-blue-500 px-6 py-2 text-amber-50 hover:bg-blue-600" to="/#Contact">Nous Contacter</Link>
@@ -111,7 +112,6 @@ function Modal({ open, onClose, title, children }) {
 
 function Hero() {
   const [openGuide, setOpenGuide] = useState(false);
-  const [openTaxes, setOpenTaxes] = useState(false);
   return <>
     <ParticlesBg />
     <section className="flex min-h-screen items-center justify-center bg-linear-to-b from-40% to-blue-50 py-4 md:py-1" id="Home">
@@ -141,12 +141,11 @@ function Hero() {
         </motion.p>
         <div className="flex flex-col items-center justify-center">
           <motion.button type="button" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }} onClick={() => setOpenGuide(true)} className="my-6 cursor-pointer rounded-md bg-blue-600 px-6 py-6 text-lg font-bold text-amber-50 shadow-xl hover:bg-blue-50 hover:text-gray-800">Télécharger le guide pratique et aide-mémoire d'impôt</motion.button>
-          <motion.button type="button" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }} onClick={() => setOpenTaxes(true)} className="w-100 cursor-pointer rounded-md bg-blue-600 px-6 py-6 text-lg font-bold text-amber-50 shadow-xl hover:bg-blue-50 hover:text-gray-800 md:text-2xl">Impôts 2025</motion.button>
+          <MotionLink to="/confirmation-client" initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: "linear" }} className="text-center w-100 cursor-pointer rounded-md bg-blue-600 px-6 py-6 text-lg font-bold text-amber-50 shadow-xl hover:bg-blue-50 hover:text-gray-800 md:text-2xl">Impôts 2026</MotionLink>
         </div>
       </div>
     </section>
     <Modal open={openGuide} onClose={() => setOpenGuide(false)} title="Télécharger le guide pratique et aide-mémoire d'impôt"><FilloutStandardEmbed filloutId="ghnAaEjFe8us" /></Modal>
-    <Modal open={openTaxes} onClose={() => setOpenTaxes(false)}><FilloutStandardEmbed filloutId="icxrgHbeThus" /></Modal>
   </>;
 }
 
@@ -260,6 +259,8 @@ export default function App() {
   return <div>
     <PageMetadata />
     <ScrollToLocation />
+    {(pathname === "/" || /^\/(confirmation-client|confirm-client)\/?$/.test(pathname)) && <AxoluAnnouncement key={pathname} showWebsiteLink={pathname === "/"} />}
+    {isClientAccess && <div className="bg-white px-4 py-5"><Link to="/" aria-label="Accueil"><BrandLogos /></Link></div>}
     {!isAdmin && !isClientAccess && <NavBar />}
     <Routes>
       <Route path="/demande-acces" element={<AccessRequestPage />} />

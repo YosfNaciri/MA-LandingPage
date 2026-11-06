@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getSupabaseClient } from '../lib/supabaseClient';
-import logo from '../assets/MACPA.jpeg';
+import BrandLogos from '../Components/BrandLogos';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function AdminLogin() {
   const input = 'mt-2 w-full rounded-lg border border-slate-200 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100';
   return <main className="flex min-h-screen items-center justify-center bg-linear-to-b from-white to-blue-50 px-4 py-12 text-gray-800">
     <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl sm:p-10">
-      <Link to="/"><img src={logo} alt="Martine Adam CPA — accueil" className="mx-auto h-16" /></Link>
+      <Link to="/"><BrandLogos /></Link>
       <p className="mt-8 text-sm font-semibold text-blue-600">Espace administration</p>
       <h1 className="mt-2 text-3xl font-bold">Connexion admin</h1>
       <p className="mt-3 text-sm text-gray-600">Consultez et exportez les confirmations clients.</p>

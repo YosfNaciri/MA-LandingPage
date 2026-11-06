@@ -1,3 +1,4 @@
+import BrandLogos from "./BrandLogos";
 import { useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { getSupabaseClient } from "../lib/supabaseClient";
@@ -95,6 +96,7 @@ export default function AdminLayout({ subtitle, children }) {
           <p className="mt-1 px-2 text-sm text-ma-muted">{subtitle}</p>
         )}
 
+        {!collapsed && <div className="mt-5 rounded-xl bg-white py-3"><BrandLogos compact /></div>}
         <nav className="mt-7 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;

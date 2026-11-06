@@ -28,6 +28,11 @@ export default function ClientChoicePage() {
             </Link>
           </article>
         </div>
+        <p className="mt-8 border-t border-blue-100 pt-6 text-center text-sm leading-7 text-gray-600">
+          <strong className="font-semibold text-blue-700">Martine Adam devient Axolu.</strong>{" "}
+          Un nouveau nom, la même équipe à vos côtés et la même attention portée à votre dossier,
+          avec l’engagement de vous offrir un service toujours plus simple, personnalisé et attentionné.
+        </p>
       </section>
     </main>
   );
