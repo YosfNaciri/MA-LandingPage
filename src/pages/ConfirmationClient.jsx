@@ -27,7 +27,6 @@ const particularityLabels = {
   rental_income: "Revenus d’immeuble locatif",
   dependent: "Autre situation à signaler",
   none: "Aucune",
-  unknown: "Je ne sais pas",
 };
 
 function PageLayout({ children, showBack = false }) {
@@ -645,12 +644,20 @@ export default function ConfirmClientPage({ clientType = "returning_client" }) {
         personnes doivent être incluses dans votre réponse.
       </p>
       <div className="mt-6 rounded-xl border border-slate-200/70 bg-blue-50 p-4 text-sm leading-6">
+        {clientType === "new_client" ? <>
+          <strong className="text-blue-600">Votre demande ne garantit pas une place.</strong>{" "}
+          Nous accordons la priorité à nos clients existants. Notre équipe évaluera votre demande
+          pour les impôts 2026 selon les places disponibles et vous communiquera une réponse
+          au plus tard à la fin de janvier 2027. Merci de votre intérêt et de votre compréhension.
+        </> : <>
         <strong className="text-blue-600">
           Votre confirmation est nécessaire.
         </strong>{" "}
         Si vous ne confirmez pas votre intention, nous ne pouvons pas garantir
         que votre dossier sera traité pour la prochaine saison fiscale.
         {" "}Votre réponse confirme votre place si nous avons préparé vos impôts 2025. Votre conjoint ou conjointe est aussi inclus. L'ajout d'un enfant ou d'un parent constitue une demande, que notre équipe évaluera selon ses disponibilités. Répondez au plus tard le 30 novembre 2026.
+        </>}
+
       </div>
 
       <form onSubmit={handleSubmit} aria-busy={loading} className="mt-8">

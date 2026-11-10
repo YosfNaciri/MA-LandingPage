@@ -120,9 +120,9 @@ function Hero() {
                     initial={{ y: -40, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.6, ease: "linear" }}
-                    className="text-4xl md:text-6xl xl:text-8xl font-medium text-center w-96 md:w-10/12"
+                    className="text-4xl md:text-4xl xl:text-6xl font-medium text-center w-96 md:w-10/12"
                   >
-                    Martine Adam <span className="text-blue-600">CPA Inc.</span>
+                    Martine Adam devient <br /> <span className="md:text-6xl xl:text-8xl text-blue-600">Groupe Axolu CPA Inc.</span>
                   </motion.h1>
                     <motion.h3
                     initial={{ y: -40, opacity: 0 }}
@@ -259,7 +259,7 @@ export default function App() {
   return <div>
     <PageMetadata />
     <ScrollToLocation />
-    {(pathname === "/" || /^\/(confirmation-client|confirm-client)\/?$/.test(pathname)) && <AxoluAnnouncement key={pathname} showWebsiteLink={pathname === "/"} />}
+    {(pathname === "/" || /^\/(confirmation-client|confirm-client)\/?$/.test(pathname)) && <AxoluAnnouncement key={pathname} />}
     {isClientAccess && <div className="bg-white px-4 py-5"><Link to="/" aria-label="Accueil"><BrandLogos /></Link></div>}
     {!isAdmin && !isClientAccess && <NavBar />}
     <Routes>

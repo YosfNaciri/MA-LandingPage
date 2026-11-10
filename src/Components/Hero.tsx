@@ -22,7 +22,8 @@ function Hero() {
             transition={{ duration: 0.6, ease: "linear" }}
             className="text-4xl md:text-6xl xl:text-8xl font-medium text-center w-96 md:w-10/12"
           >
-            Martine Adam <span className="text-blue-600">CPA Inc.</span>
+            <span className="mb-3 block text-lg font-medium text-slate-500 sm:text-xl md:mb-5 md:text-2xl xl:text-3xl">Martine Adam devient</span>
+            <span className="block font-bold leading-tight tracking-tight text-blue-600">Groupe Axolu CPA Inc.</span>
           </motion.h1>
             <motion.h3
             initial={{ y: -40, opacity: 0 }}
